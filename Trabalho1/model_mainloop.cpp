@@ -49,7 +49,7 @@ int main ()
     }
 
     // Condicao de parada
-    if ( (t1-T) > 15000 ) break;
+    if ( (t1-T) > 3000 ) break;
 
     std::this_thread::sleep_for (std::chrono::milliseconds(100));
     i++;

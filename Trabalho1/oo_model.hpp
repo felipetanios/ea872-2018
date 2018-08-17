@@ -5,25 +5,15 @@
 class Corpo {
   private:
   float massa;
-  float aceleracao;
   float velocidade;
   float posicao;
-  float constante_elastica;
-  float fator_amortecimento;
-  float posicao_inicial;
-  float w;
 
   public:
   Corpo(float massa, float velocidade, float posicao);
   void update( float nova_velocidade, float nova_posicao);
   float get_massa();
-  float get_aceleracao();
   float get_velocidade();
   float get_posicao();
-  float get_constante_elastica();
-  float get_fator_amortecimento();
-  float get_posicao_inicial();
-  float get_w();
 
 
 };
