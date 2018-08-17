@@ -4,8 +4,8 @@
 #include <cmath>
 #include <iostream>
 
-# define K              50.0
-# define B              0.5
+# define K              100.0
+# define B              0.1
 
 Corpo::Corpo(float massa, float velocidade, float posicao) {
   this->massa = massa;
@@ -52,8 +52,8 @@ void Fisica::update(float deltaT) {
   // Atualiza parametros dos corpos!
   std::vector<Corpo *> *c = this->lista->get_corpos();
   for (int i = 0; i < (*c).size(); i++) {
-    float new_acc = (-1)*K*(*c)[i]->get_posicao()/(*c)[i]->get_massa() - B*(*c)[i]->get_velocidade();
-    float new_vel = (*c)[i]->get_velocidade() + (float)deltaT * new_acc/1000 ;
+    float new_acc = (-1)*K*(*c)[i]->get_posicao()/(*c)[i]->get_massa();
+    float new_vel = (1 - B)*(*c)[i]->get_velocidade() + (float)deltaT * new_acc/1000;
     float new_pos = (*c)[i]->get_posicao() + (float)deltaT * new_vel/1000;
     (*c)[i]->update(new_vel, new_pos);
   }
