@@ -69,14 +69,14 @@ Fisica::Fisica(ListaDeCorpos *ldc) {
 }
 
 void Fisica::update(float deltaT) {
-  static float totalTime = 0;
-  totalTime += deltaT;
+  //static float totalTime = 0;
+  //totalTime += deltaT;
   // Atualiza parametros dos corpos!
   std::vector<Corpo *> *c = this->lista->get_corpos();
   for (int i = 0; i < (*c).size(); i++) {
-    float w = (*c)[i]->get_w();
-    float A0 = (*c)[i]->get_posicao_inicial();
-    float new_vel = (*c)[i]->get_velocidade() + ((float)deltaT/1000) * (-1)*A0 * pow(w,2) * cos(w * totalTime);
+    float new_acc = (-1)*K*(*c)[i]->get_posicao()/(*c)[i]->get_massa();
+    //float A0 = (*c)[i]->get_posicao_inicial();
+    float new_vel = (*c)[i]->get_velocidade() + (float)deltaT * new_acc/1000 ;
     float new_pos = (*c)[i]->get_posicao() + (float)deltaT * new_vel/1000;
     (*c)[i]->update(new_vel, new_pos);
   }
