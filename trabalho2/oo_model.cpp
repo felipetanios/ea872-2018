@@ -4,6 +4,9 @@
 
 #include <ncurses.h>
 
+# define K              100.0
+# define B              0.1
+
 Corpo::Corpo(float massa, float velocidade, float posicao) {
   this->massa = massa;
   this->velocidade = velocidade;
@@ -61,13 +64,9 @@ void Fisica::update(float deltaT) {
   // Atualiza parametros dos corpos!
   std::vector<Corpo *> *c = this->lista->get_corpos();
   for (int i = 0; i < (*c).size(); i++) {
-    float new_vel = (*c)[i]->get_velocidade() + (float)deltaT * (-10.0)/1000;
+    float new_acc = (-1)*K*(*c)[i]->get_posicao()/(*c)[i]->get_massa();
+    float new_vel = (1 - B)*(*c)[i]->get_velocidade() + (float)deltaT * new_acc/1000;
     float new_pos = (*c)[i]->get_posicao() + (float)deltaT * new_vel/1000;
-    if (new_pos < 0) {
-      new_pos *= -1;
-      new_vel *= -1;
-    }
-
     (*c)[i]->update(new_vel, new_pos);
   }
 }
@@ -93,24 +92,27 @@ void Tela::update() {
 
   std::vector<Corpo *> *corpos_old = this->lista_anterior->get_corpos();
 
+  int terminalSizeX, terminalSizeY;
+  getmaxyx(stdscr, terminalSizeY, terminalSizeX);
+  int offset = this->maxI / 2;
   // Apaga corpos na tela
   for (int k=0; k<corpos_old->size(); k++)
   {
-    i = (int) ((*corpos_old)[k]->get_posicao()) * \
+    i = offset + (int) ((*corpos_old)[k]->get_posicao()) * \
         (this->maxI / this->maxX);
+        if (i < terminalSizeY && i >=0) {
     move(i, k);   /* Move cursor to position */
     echochar(' ');  /* Prints character, advances a position */
+        }
   }
 
   // Desenha corpos na tela
   std::vector<Corpo *> *corpos = this->lista->get_corpos();
-  int terminalSizeX, terminalSizeY;
-  getmaxyx(stdscr, terminalSizeY, terminalSizeX);
   for (int k=0; k<corpos->size(); k++)
   {
-    i = (int) ((*corpos)[k]->get_posicao()) * \
+    i = offset + (int) ((*corpos)[k]->get_posicao()) * \
         (this->maxI / this->maxX);
-        if (i < terminalSizeY) {
+        if (i < terminalSizeY && i >=0) {
     move(i, k);   /* Move cursor to position */
     echochar('*');  /* Prints character, advances a position */
 
