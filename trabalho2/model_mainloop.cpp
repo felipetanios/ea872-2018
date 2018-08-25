@@ -12,10 +12,10 @@ uint64_t get_now_ms() {
 
 int main ()
 {
-  Corpo *c1 = new Corpo(10, 0, 20);
-  Corpo *c2 = new Corpo(10, 0, 19);
-  Corpo *c3 = new Corpo(10, 0, 17);
-  Corpo *c4 = new Corpo(10, 0, 15);
+  Corpo *c1 = new Corpo(10, 0, 20,100,0.1);
+  Corpo *c2 = new Corpo(10, 0, 19,100,0.2);
+  Corpo *c3 = new Corpo(10, 0, 17,50,0.3);
+  Corpo *c4 = new Corpo(10, 0, 15,200,0.2);
 
   ListaDeCorpos *l = new ListaDeCorpos();
   l->add_corpo(c1);
@@ -50,7 +50,7 @@ int main ()
     tela->update();
 
     // Condicao de parada
-    if ( (t1-T) > 10000000 ) break;
+    if ( (t1-T) > 20000 ) break;
 
     std::this_thread::sleep_for (std::chrono::milliseconds(100));
     i++;

@@ -7,13 +7,17 @@ class Corpo {
   float massa;
   float velocidade;
   float posicao;
+  float k;
+  float b;
 
   public:
-  Corpo(float massa, float velocidade, float posicao);
+  Corpo(float massa, float velocidade, float posicao, float k, float b);
   void update(float nova_velocidade, float nova_posicao);
   float get_massa();
   float get_velocidade();
   float get_posicao();
+  float get_k();
+  float get_b();
 };
 
 class ListaDeCorpos {
