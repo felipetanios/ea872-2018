@@ -18,9 +18,9 @@ int main ()
   Corpo *c4 = new Corpo(10, 0, 15,200,0.2);
 
   ListaDeCorpos *l = new ListaDeCorpos();
-  //l->add_corpo(c1);
-  //l->add_corpo(c2);
-  //l->add_corpo(c3);
+  l->add_corpo(c1);
+  l->add_corpo(c2);
+  l->add_corpo(c3);
   l->add_corpo(c4);
 
   Fisica *f = new Fisica(l);
@@ -65,7 +65,7 @@ int main ()
     }
 
     // Condicao de parada
-    if ( (t1-T) > 100000 ) break;
+    if ( (t1-T) > 50000 ) break;
 
     std::this_thread::sleep_for (std::chrono::milliseconds(100));
     i++;
