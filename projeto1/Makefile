@@ -1,9 +1,17 @@
-FLAGS=-lncurses -lpthread -std=c++11
+UNAME := $(shell uname)
 
-all: model
+ifeq ($(UNAME), Linux)
+	LIBRARIES = -lglut -lGL -lGLU
+else 
+	LIBRARIES = -framework GLUT -framework OpenGL 
 
-model: model_mainloop.cpp oo_model.cpp oo_model.hpp
-	g++ -omodel model_mainloop.cpp oo_model.cpp $(FLAGS)
 
-clean:
-	rm model
+
+
+game: 
+	g++ ./src/* ./src/*/* -I ./inc/* $(LIBRARIES) -o game
+
+	
+all: game
+
+
