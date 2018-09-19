@@ -18,7 +18,12 @@ void Controller::init() {
     }
 }
 
-void Controller::update() {}
+void Controller::update() {
+    list<GameObject>::iterator it;
+    for (it = Controller::gameObjects.begin(); it != Controller::gameObjects.end(); ++it) {
+        (*it).update();
+    }
+}
 
 void Controller::readKeyboardInput(unsigned char key, int x, int y) {
     switch(key) {

@@ -25,6 +25,10 @@ Ball::~Ball() {
 }
 
 void Ball::update() {
-	x += 0.1f;
+	x += xSpeed;
+	y += ySpeed;
+	/*
+	*@TODO: Detect collision
+	*/
 	renderer->setPosition(x, y, z);
 }

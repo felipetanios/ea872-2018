@@ -16,5 +16,6 @@ public:
     float width;
     float height;
     float depth;
+    void update() {}//oqissofazsocorro;
 };
 #endif

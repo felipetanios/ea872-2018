@@ -64,6 +64,11 @@ void reshape(GLsizei width, GLsizei height) {  // GLsizei for non-negative integ
     gluLookAt(0.0f, 0.0f, 5.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f);
 }
  
+void idle() {
+    Controller::update();
+    glutPostRedisplay();
+}
+
 /* Main function: GLUT runs as a console application starting at main() */
 int main(int argc, char** argv) {
     Controller::init();
@@ -73,7 +78,7 @@ int main(int argc, char** argv) {
     glutInitWindowPosition(50, 50); // Position the window's initial top-left corner
     glutCreateWindow(title);          // Create window with the given title
     glutDisplayFunc(display);       // Register callback handler for window re-paint event
-    glutIdleFunc(display);
+    glutIdleFunc(idle);
     glutReshapeFunc(reshape);       // Register callback handler for window re-size event
     glutKeyboardFunc(Controller::readKeyboardInput);
     initGL();                       // Our own OpenGL initialization
