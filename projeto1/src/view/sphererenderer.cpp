@@ -1,4 +1,4 @@
-#include <view/cuberenderer.hpp>
+#include <view/sphererenderer.hpp>
 #include <GL/glut.h>  
 
 SphereRenderer::SphereRenderer() { }
