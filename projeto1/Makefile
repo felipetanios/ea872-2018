@@ -15,5 +15,5 @@ game:clean
 all: game
 
 clean: 
-	rm game || echo "haaaaa";
+	rm game || echo "" > /dev/null;
 
