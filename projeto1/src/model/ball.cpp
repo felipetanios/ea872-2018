@@ -25,6 +25,6 @@ Ball::~Ball() {
 }
 
 void Ball::update() {
-	x += MOVE_INCREMENT;
+	x += 0.1f;
 	renderer->setPosition(x, y, z);
 }

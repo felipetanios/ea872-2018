@@ -1,6 +1,7 @@
 #include <view/cuberenderer.hpp>
 #include <glutheaders.hpp>  
 
+
 SphereRenderer::SphereRenderer() { }
 
 void SphereRenderer::render() {	
