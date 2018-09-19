@@ -4,6 +4,7 @@
 class Renderer {
 public:
     Renderer();
+    ~Renderer();
     void setSize(float width, float height, float depth);
     void setColor(float r, float g, float b);
     void setPosition(float x, float y, float z);

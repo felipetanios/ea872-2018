@@ -1,6 +1,8 @@
 #include <view/renderer.hpp>
 
 Renderer::Renderer() {}
+Renderer::~Renderer() {}
+void Renderer::render() {}
 
 void Renderer::setSize(float width, float height, float depth) {
     this->width = width;
