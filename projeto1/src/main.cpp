@@ -12,22 +12,22 @@ list<Renderer*> renderers = {};
 
 /* Initialize OpenGL Graphics */
 void initGL() {
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // Set background color to black and opaque
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f); // Set background color to black and opaque
     glClearDepth(1.0f);                   // Set background depth to farthest
-    glEnable(GL_DEPTH_TEST);
+    glShadeModel(GL_FLAT);
+    glShadeModel(GL_SMOOTH);   // Enable smooth shading
+    
     glEnable(GL_LIGHTING);
     glEnable(GL_LIGHT0);
-    glDepthFunc(GL_LEQUAL);    // Set the type of depth-test
-    glShadeModel(GL_SMOOTH);   // Enable smooth shading
-    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);  // Nice perspective corrections
+    //glDepthFunc(GL_LEQUAL);    // Set the type of depth-test
+    glEnable(GL_DEPTH_TEST);
+    //glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);  // Nice perspective corrections
 }
  
 /* Handler for window-repaint event. Called back when the window first appears and
      whenever the window needs to be re-painted. */
 void display() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clear color and depth buffers
-
-    glPushMatrix(); 
 
     GLfloat light1pos[] = {5.0f, 10.0f, 5.0f, 1.0f};
     GLfloat light2pos[] = {1.0f, 1.0f, 1.0f, 1.0f};
@@ -39,14 +39,10 @@ void display() {
     glLightfv(GL_LIGHT0, GL_SPECULAR, light3pos);
     glLightModelfv(GL_LIGHT_MODEL_AMBIENT, lightmodel);
 
-    glMatrixMode(GL_MODELVIEW);     // To operate on model-view matrix
-
     list<Renderer*>::iterator it;
     for (it = renderers.begin(); it != renderers.end(); ++it) {
         (*it)->render();
     }
-
-    glPopMatrix();
     glutSwapBuffers();  // Swap the front and back frame buffers (double buffering)
 }
  
@@ -64,7 +60,10 @@ void reshape(GLsizei width, GLsizei height) {  // GLsizei for non-negative integ
     glMatrixMode(GL_PROJECTION);  // To operate on the Projection matrix
     glLoadIdentity();             // Reset
     // Enable perspective projection with fovy, aspect, zNear and zFar
-    gluPerspective(45.0f, aspect, 0.1f, 100.0f);
+    gluPerspective(60.0f, aspect, 0.1f, 20.0f);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    gluLookAt(0.0f, 0.0f, 5.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f);
 }
  
 /* Main function: GLUT runs as a console application starting at main() */
