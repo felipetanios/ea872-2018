@@ -1,18 +1,12 @@
-#include <glutheaders.hpp>  
-#include <model/platform.hpp> 
-#include <model/ball.hpp>
+#include <glutheaders.hpp> 
 #include <view/renderer.hpp>
+#include <controller/controller.hpp>
 #include <list>
 
 using namespace std;
 
 /* Global variables */
 char title[] = "3D Shapes";
-
-list<Renderer*> renderers = {}; 
-
-Platform platform;
-Ball ball;
 
 /* Initialize OpenGL Graphics */
 void initGL() {
@@ -44,7 +38,7 @@ void display() {
     glLightModelfv(GL_LIGHT_MODEL_AMBIENT, lightmodel);
 
     list<Renderer*>::iterator it;
-    for (it = renderers.begin(); it != renderers.end(); ++it) {
+    for (it = Controller::renderers.begin(); it != Controller::renderers.end(); ++it) {
         (*it)->render();
     }
     glutSwapBuffers();  // Swap the front and back frame buffers (double buffering)
@@ -69,22 +63,10 @@ void reshape(GLsizei width, GLsizei height) {  // GLsizei for non-negative integ
     glLoadIdentity();
     gluLookAt(0.0f, 0.0f, 5.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f);
 }
-
-void keyboard(unsigned char key, int x, int y) {
-    switch(key) {
-        case 'a':
-            platform.moveLeft();
-            break;
-        case 'd':
-            platform.moveRight();
-            break;
-    }
-}
  
 /* Main function: GLUT runs as a console application starting at main() */
 int main(int argc, char** argv) {
-    renderers.push_back(platform.renderer);
-    renderers.push_back(ball.renderer);
+    Controller::init();
     glutInit(&argc, argv);            // Initialize GLUT
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH); // Enable double buffered mode
     glutInitWindowSize(640, 480);   // Set the window's initial width & height
@@ -93,7 +75,7 @@ int main(int argc, char** argv) {
     glutDisplayFunc(display);       // Register callback handler for window re-paint event
     glutIdleFunc(display);
     glutReshapeFunc(reshape);       // Register callback handler for window re-size event
-    glutKeyboardFunc(keyboard);
+    glutKeyboardFunc(Controller::readKeyboardInput);
     initGL();                       // Our own OpenGL initialization
     glutMainLoop();                 // Enter the infinite event-processing loop
     return 0;

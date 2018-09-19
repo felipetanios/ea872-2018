@@ -14,5 +14,5 @@ public:
 
 	static void init();
 	static void update();
-	static void readInput();
+	static void readKeyboardInput(unsigned char key, int x, int y);
 };

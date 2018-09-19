@@ -20,5 +20,13 @@ void Controller::init() {
 
 void Controller::update() {}
 
-void Controller::readInput() {}
-
+void Controller::readKeyboardInput(unsigned char key, int x, int y) {
+    switch(key) {
+        case 'a':
+            platform.moveLeft();
+            break;
+        case 'd':
+            platform.moveRight();
+            break;
+    }
+}
