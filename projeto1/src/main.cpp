@@ -1,4 +1,4 @@
-#include <GL/glut.h>  
+#include <GLUT/glut.h>  
 #include <model/platform.hpp> 
 #include <view/renderer.hpp>
 #include <list>

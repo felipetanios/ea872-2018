@@ -1,5 +1,5 @@
 #include <view/cuberenderer.hpp>
-#include <GL/glut.h>  
+#include <glutheaders.hpp>  
 
 SphereRenderer::SphereRenderer() { }
 
