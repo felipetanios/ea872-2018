@@ -9,7 +9,7 @@ endif
 
 
 game:clean
-	g++ src/main.cpp ./src/model/* ./src/view/* -Iinc $(LIBRARIES) -o game
+	g++ src/main.cpp ./src/model/* ./src/view/* ./src/controller/* -Iinc $(LIBRARIES) -o game
 
 	
 all: game
