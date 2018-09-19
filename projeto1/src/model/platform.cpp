@@ -1,12 +1,12 @@
 #include <model/platform.hpp>
 #include <view/cuberenderer.hpp>
 
-#define MOVE_INCREMENT 0.1f;
+#define MOVE_INCREMENT 0.1f
 
 
 Platform::Platform() {
 	x = 0.f;
-	y = -3.5f;
+	y = -3.f;
 	z = -8.f;
 	width = 4.f;
 	height = .3f;

@@ -4,12 +4,12 @@
 Ball::Ball() {
 	x = 0.f;
 	y = 0.f;
-	z = 0.f;
+	z = -8.f;
 	// width = 10.f;
 	// height = 1.f;
 	// depth = 3.f;
-	r = 1.f;
-	g = 0.f;
+	r = 0.f;
+	g = 1.f;
 	b = 0.f;
 	xSpeed = 0.2f;
 	ySpeed = -0.2f;

@@ -1,3 +1,7 @@
+
+#ifndef GAME_OBJECT
+#define GAME_OBJECT
+
 #include <view/renderer.hpp>
 
 class GameObject {
@@ -13,3 +17,4 @@ public:
     float height;
     float depth;
 };
+#endif

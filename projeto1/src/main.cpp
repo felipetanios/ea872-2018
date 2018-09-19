@@ -1,5 +1,6 @@
 #include <glutheaders.hpp>  
 #include <model/platform.hpp> 
+#include <model/ball.hpp>
 #include <view/renderer.hpp>
 #include <list>
 
@@ -9,6 +10,9 @@ using namespace std;
 char title[] = "3D Shapes";
 
 list<Renderer*> renderers = {}; 
+
+Platform platform;
+Ball ball;
 
 /* Initialize OpenGL Graphics */
 void initGL() {
@@ -65,18 +69,31 @@ void reshape(GLsizei width, GLsizei height) {  // GLsizei for non-negative integ
     glLoadIdentity();
     gluLookAt(0.0f, 0.0f, 5.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f);
 }
+
+void keyboard(unsigned char key, int x, int y) {
+    switch(key) {
+        case 'a':
+            platform.moveLeft();
+            break;
+        case 'd':
+            platform.moveRight();
+            break;
+    }
+}
  
 /* Main function: GLUT runs as a console application starting at main() */
 int main(int argc, char** argv) {
-    Platform platform;
     renderers.push_back(platform.renderer);
+    renderers.push_back(ball.renderer);
     glutInit(&argc, argv);            // Initialize GLUT
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH); // Enable double buffered mode
     glutInitWindowSize(640, 480);   // Set the window's initial width & height
     glutInitWindowPosition(50, 50); // Position the window's initial top-left corner
     glutCreateWindow(title);          // Create window with the given title
     glutDisplayFunc(display);       // Register callback handler for window re-paint event
+    glutIdleFunc(display);
     glutReshapeFunc(reshape);       // Register callback handler for window re-size event
+    glutKeyboardFunc(keyboard);
     initGL();                       // Our own OpenGL initialization
     glutMainLoop();                 // Enter the infinite event-processing loop
     return 0;
