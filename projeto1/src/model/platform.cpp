@@ -6,11 +6,11 @@
 
 Platform::Platform() {
 	x = 0.f;
-	y = -1.f;
-	z = 0.f;
-	width = 10.f;
-	height = 1.f;
-	depth = 3.f;
+	y = -3.5f;
+	z = -8.f;
+	width = 4.f;
+	height = .3f;
+	depth = 1.f;
 	r = 1.f;
 	g = 0.f;
 	b = 0.f;
