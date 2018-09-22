@@ -16,11 +16,11 @@ void SphereRenderer::render() {
     glMaterialfv(GL_FRONT, GL_SHININESS, shininess);
 
     glTranslatef(this->x, this->y, this->z);
-    // glScalef(this->width, this->height, this->depth);
+    glScalef(this->width, this->height, this->depth);
     
     //void glutSolidSphere(GLdouble radius,
     //                 GLint slices, GLint stacks);
-    glutSolidSphere(0.1f, 100, 100);
+    glutSolidSphere(1.0f, 100, 100);
 
     glPopMatrix();
 }

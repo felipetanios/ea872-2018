@@ -5,6 +5,7 @@
 
 
 Platform::Platform() {
+	this->setId();
 	x = 0.f;
 	y = -3.f;
 	z = -8.f;
@@ -14,6 +15,8 @@ Platform::Platform() {
 	r = 1.f;
 	g = 0.f;
 	b = 0.f;
+
+	this->updateCollisionLogic();
 
 	renderer = new CubeRenderer();
 	renderer->setSize(width, height, depth);
@@ -27,10 +30,12 @@ Platform::~Platform() {
 
 void Platform::moveRight() {
 	x += MOVE_INCREMENT;
+	this->updateCollisionLogic();
 	renderer->setPosition(x, y, z);
 }
 
 void Platform::moveLeft() {
 	x -= MOVE_INCREMENT;
+	this->updateCollisionLogic();
 	renderer->setPosition(x, y, z);
 }
