@@ -11,8 +11,8 @@ Ball::Ball() {
 	r = 0.f;
 	g = 1.f;
 	b = 0.f;
-	xSpeed = 0.2f;
-	ySpeed = -0.2f;
+	xSpeed = 0.02f;
+	ySpeed = -0.02f;
 
 	renderer = new SphereRenderer();
 	//renderer->setSize(width, height, depth);

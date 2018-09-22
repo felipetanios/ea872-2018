@@ -16,6 +16,6 @@ public:
     float width;
     float height;
     float depth;
-    void update() {}//oqissofazsocorro;
+    virtual void update() {}; //oqissofazsocorro;
 };
 #endif
