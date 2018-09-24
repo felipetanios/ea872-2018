@@ -1,4 +1,3 @@
-
 #ifndef GAME_OBJECT
 #define GAME_OBJECT
 
@@ -21,8 +20,7 @@ public:
 
     // collision logic
     float left, right, top, bottom;
-    list<VerticalLine> vLines;
-    list<HorizontalLine> hLines;
+    list<Line*> lines;
     virtual void updateCollisionLogic();
 
 protected:

@@ -14,12 +14,20 @@ void Controller::init() {
 	Controller::gameObjects.push_back(platform);
 
 	// add limits
-	Box *ceiling = new Box(0.f, 3.5f, -8.f, 10.f, .5f);
+	Box *ceiling = new Box(0.f, 3.5f, -8.f, 10.5f, .5f);
 	Box *leftWall = new Box(-5.f, -1.5f, -8.f, .5f, 10.f);
 	Box *rightWall = new Box(5.f, -1.5f, -8.f, .5f, 10.f);
+    ceiling->renderer->r   = 0.4f; ceiling->renderer->g   = 0.4f; ceiling->renderer->b   = 0.4f;
+    leftWall->renderer->r  = 0.4f; leftWall->renderer->g  = 0.4f; leftWall->renderer->b  = 0.4f;
+    rightWall->renderer->r = 0.4f; rightWall->renderer->g = 0.4f; rightWall->renderer->b = 0.4f;
 	Controller::gameObjects.push_back(ceiling);
 	Controller::gameObjects.push_back(leftWall);
 	Controller::gameObjects.push_back(rightWall);
+
+    // add random boxes
+    Controller::gameObjects.push_back(new Box(1.f, 0.f, -8.f, 1.f, 2.f));
+    // Controller::gameObjects.push_back(new Box(0.f, -2.f, -8.f, 1.f, 2.f));
+    // Controller::gameObjects.push_back(new Box(1.f, 0.f, -6.f, 1.f, 2.f));
 
 	list<GameObject*>::iterator it;
     for (it = Controller::gameObjects.begin(); it != Controller::gameObjects.end(); ++it) {
