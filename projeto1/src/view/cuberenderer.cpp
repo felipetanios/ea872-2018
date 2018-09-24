@@ -1,5 +1,5 @@
 #include <view/cuberenderer.hpp>
-#include <glutheaders.hpp>   
+#include <view/glmanager.hpp>   
 
 CubeRenderer::CubeRenderer() { }
 

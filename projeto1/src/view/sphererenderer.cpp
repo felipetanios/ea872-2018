@@ -1,5 +1,5 @@
 #include <view/sphererenderer.hpp>
-#include <glutheaders.hpp>  
+#include <view/glmanager.hpp>  
 
 
 SphereRenderer::SphereRenderer() { }
