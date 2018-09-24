@@ -10,7 +10,7 @@ using namespace std;
 
 Ball::Ball(float radius) {
 	this->setId();
-	x = 0.f;
+	x = 2.f;
 	y = 0.f;
 	z = -8.f;
 	width = radius;
@@ -19,8 +19,8 @@ Ball::Ball(float radius) {
 	r = 0.f;
 	g = 1.f;
 	b = 0.f;
-	xSpeed = 0.02f;
-	ySpeed = -0.02f;
+	xSpeed = 0.05f;
+	ySpeed = 0.05f;
 
 	renderer = new SphereRenderer();
 	renderer->setSize(width, height, depth);
@@ -38,9 +38,10 @@ void Ball::update() {
 	list<HorizontalLine> worldHLines = {};
 	list<GameObject*>::iterator it;
     for (it = Controller::gameObjects.begin(); it != Controller::gameObjects.end(); ++it) {
-    	if ((*it)->getId() == this->getId()) continue;
-        worldVLines.insert(worldVLines.end(), (*it)->vLines.begin(), (*it)->vLines.end());
-        worldHLines.insert(worldHLines.end(), (*it)->hLines.begin(), (*it)->hLines.end());
+    	if ((*it)->getId() != this->getId()) {
+	        worldVLines.insert(worldVLines.end(), (*it)->vLines.begin(), (*it)->vLines.end());
+	        worldHLines.insert(worldHLines.end(), (*it)->hLines.begin(), (*it)->hLines.end());
+	    }
     }
 
     // detect collision between vertical lines
