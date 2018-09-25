@@ -22,10 +22,10 @@ Ball::Ball(float radius, float x, float y) {
 	xSpeed = 0.05f;
 	ySpeed = 0.05f;
 
-	renderer = new SphereRenderer();
-	renderer->setSize(width, height, depth);
-	renderer->setColor(r, g, b);
-	renderer->setPosition(x, y, z);
+	renderer = SphereRenderer();
+	renderer.setSize(width, height, depth);
+	renderer.setColor(r, g, b);
+	renderer.setPosition(x, y, z);
 }
 
 void Ball::update() {
@@ -64,7 +64,7 @@ void Ball::update() {
 	x += xSpeed;
 	y += ySpeed;
 	
-	renderer->setPosition(x, y, z);
+	renderer.setPosition(x, y, z);
 	this->updateCollisionLogic();
 
 }

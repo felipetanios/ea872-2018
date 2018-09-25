@@ -15,7 +15,7 @@ public:
     bool deleted = false;
     int getId();
 
-	Renderer *renderer; // view logic
+	Renderer renderer; // view logic
     float x, y, z; // position
     float r, g, b; // color
     float width, height, depth; // size
@@ -29,6 +29,7 @@ public:
 
     GameObject();
     ~GameObject();
+
 protected:
     int id;
     static int totalObjects;

@@ -4,14 +4,8 @@
 
 using namespace std;
 
-list<Renderer*> GLManager::renderers = {};
 
 void GLManager::init(int argc, char** argv, char name[]) {
-    // gather renderers
-    map<int, GameObject*>::iterator it;
-    for (it = GameObject::gameObjects.begin(); it != GameObject::gameObjects.end(); ++it) {
-        GLManager::renderers.push_back(it->second->renderer);
-    }
 
 	glutInit(&argc, argv);            // Initialize GLUT
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH); // Enable double buffered mode
@@ -49,7 +43,7 @@ void GLManager::glDisplay() {
     map<int, GameObject*>::iterator it;
     for (it = GameObject::gameObjects.begin(); it != GameObject::gameObjects.end(); ++it) {
         if (!it->second->deleted)
-            it->second->renderer->render();
+            it->second->renderer.render();
     }
 
     
@@ -78,6 +72,14 @@ void GLManager::glReshape(GLsizei width, GLsizei height) {
 void GLManager::glIdle() {
     Controller::update();
     glutPostRedisplay();
+}
+
+void GLManager::renderCube() {
+    glutSolidCube(1.f);
+}
+
+void GLManager::renderSphere() {
+    glutSolidSphere(1.0f, 100, 100); // radius, slices, stacks
 }
 
 void GLManager::redisplay() {

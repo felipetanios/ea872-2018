@@ -3,5 +3,4 @@
 class SphereRenderer : public Renderer {
 public:
 	SphereRenderer();
-	void render();
 };

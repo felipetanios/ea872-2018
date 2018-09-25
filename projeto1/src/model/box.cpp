@@ -14,9 +14,9 @@ Box::Box(float x, float y, float z, float width, float height) {
 
 	this->updateCollisionLogic();
 
-	renderer = new CubeRenderer();
-	renderer->setSize(this->width, this->height, depth);
-	renderer->setColor(r, g, b);
-	renderer->setPosition(this->x, this->y, this->z);
+	renderer = CubeRenderer();
+	renderer.setSize(this->width, this->height, depth);
+	renderer.setColor(r, g, b);
+	renderer.setPosition(this->x, this->y, this->z);
 
 }

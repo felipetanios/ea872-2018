@@ -17,20 +17,20 @@ Platform::Platform() {
 
 	this->updateCollisionLogic();
 
-	renderer = new CubeRenderer();
-	renderer->setSize(width, height, depth);
-	renderer->setColor(r, g, b);
-	renderer->setPosition(x, y, z);
+	renderer = CubeRenderer();
+	renderer.setSize(width, height, depth);
+	renderer.setColor(r, g, b);
+	renderer.setPosition(x, y, z);
 }
 
 void Platform::moveRight() {
 	x += MOVE_INCREMENT;
 	this->updateCollisionLogic();
-	renderer->setPosition(x, y, z);
+	renderer.setPosition(x, y, z);
 }
 
 void Platform::moveLeft() {
 	x -= MOVE_INCREMENT;
 	this->updateCollisionLogic();
-	renderer->setPosition(x, y, z);
+	renderer.setPosition(x, y, z);
 }
