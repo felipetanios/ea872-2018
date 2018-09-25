@@ -5,6 +5,7 @@ using namespace std;
 int GameObject::totalObjects = 0;
 
 map<int, GameObject*> GameObject::gameObjects = {};
+list<int> GameObject::toBeDeleted = {};
 
 GameObject::GameObject() {
     this->setId();
@@ -44,7 +45,23 @@ void GameObject::updateCollisionLogic() {
 
 void GameObject::update() {}   
 
-void GameObject::collide(GameObject *other) {}    
+void GameObject::collide() {}    
+
+void GameObject::markForDeletion() {
+    this->deleted = true;
+    GameObject::toBeDeleted.push_back(this->getId());
+}
+
+void GameObject::applyDeletions() {
+    list<int>::iterator it1;
+    for (it1 = GameObject::toBeDeleted.begin(); it1 != GameObject::toBeDeleted.end(); ++it1) {
+        int index = *it1;
+        map<int, GameObject*>::iterator it2;
+        it2 = GameObject::gameObjects.find(index);
+        GameObject::gameObjects.erase(it2);
+    }
+    GameObject::toBeDeleted.clear();
+}
 
 int GameObject::setId() {
     this->id = GameObject::totalObjects++;

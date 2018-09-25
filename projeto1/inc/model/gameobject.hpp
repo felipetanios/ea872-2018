@@ -12,6 +12,8 @@ class GameObject {
 public:
     static int getTotalObjects();
     static map<int, GameObject*> gameObjects;
+    static void applyDeletions();
+
     bool deleted = false;
     int getId();
 
@@ -25,12 +27,14 @@ public:
     float left, right, top, bottom;
     list<Line*> lines;
     virtual void updateCollisionLogic();
-    virtual void collide(GameObject *other);
+    virtual void collide();
 
     GameObject();
     ~GameObject();
 
 protected:
+    static list<int> toBeDeleted;
+    void markForDeletion();
     int id;
     static int totalObjects;
     int setId();

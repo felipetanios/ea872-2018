@@ -2,6 +2,7 @@
 #include <model/brick.hpp>
 #include <cstdlib>
 #include <ctime>
+#include <iostream>
 
 using namespace std;
 
@@ -32,6 +33,7 @@ void Controller::update() {
     for (it1 = GameObject::gameObjects.begin(); it1 != GameObject::gameObjects.end(); ++it1) {
         it1->second->update();
     }
+    GameObject::applyDeletions();
 }
 
 void Controller::readKeyboardInput(unsigned char key, int x, int y) {

@@ -2,6 +2,6 @@
 
 class Brick : public Box {
 public:
-	void collide(GameObject *other);
+	void collide();
 	Brick(float x, float y);
 };

@@ -56,7 +56,7 @@ void Ball::update() {
     }
 
 	if (collided != -1 && GameObject::gameObjects.find(collided) != GameObject::gameObjects.end()) {
-		GameObject::gameObjects[collided]->collide(this);
+		GameObject::gameObjects[collided]->collide();
 	}
 
     if (vCollision) xSpeed *= -1;
