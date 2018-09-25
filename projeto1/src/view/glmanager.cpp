@@ -1,12 +1,18 @@
 #include <view/glmanager.hpp>
 #include <controller/controller.hpp>
+#include <iostream>
 
 using namespace std;
 
 list<Renderer*> GLManager::renderers = {};
 
 void GLManager::init(int argc, char** argv, char name[]) {
-	renderers = Controller::renderers;
+    // gather renderers
+    map<int, GameObject*>::iterator it;
+    for (it = GameObject::gameObjects.begin(); it != GameObject::gameObjects.end(); ++it) {
+        GLManager::renderers.push_back(it->second->renderer);
+    }
+
 	glutInit(&argc, argv);            // Initialize GLUT
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH); // Enable double buffered mode
     glutInitWindowSize(640, 480);   // Set the window's initial width & height
@@ -19,12 +25,7 @@ void GLManager::init(int argc, char** argv, char name[]) {
     
     glEnable(GL_LIGHTING);
     glEnable(GL_LIGHT0);
-    //glDepthFunc(GL_LEQUAL);    // Set the type of depth-test
     glEnable(GL_DEPTH_TEST);
-    //glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);  // Nice perspective corrections
-
-
-
 
     glutDisplayFunc(GLManager::glDisplay);       // Register callback handler for window re-paint event
     glutIdleFunc(GLManager::glIdle);
@@ -45,10 +46,13 @@ void GLManager::glDisplay() {
     glLightfv(GL_LIGHT0, GL_SPECULAR, light3pos);
     glLightModelfv(GL_LIGHT_MODEL_AMBIENT, lightmodel);
 
-    list<Renderer*>::iterator it;
-    for (it = Controller::renderers.begin(); it != Controller::renderers.end(); ++it) {
-        (*it)->render();
+    map<int, GameObject*>::iterator it;
+    for (it = GameObject::gameObjects.begin(); it != GameObject::gameObjects.end(); ++it) {
+        if (!it->second->deleted)
+            it->second->renderer->render();
     }
+
+    
     glutSwapBuffers();  // Swap the front and back frame buffers (double buffering)
 }
 

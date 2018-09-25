@@ -3,15 +3,15 @@
 #include <controller/controller.hpp>
 #include <list>
 #include <cmath>
+#include <iostream>
 
 using namespace std;
 
 #define COLLISION_THRESHOLD 0.1f
 
-Ball::Ball(float radius) {
-	this->setId();
-	x = 2.f;
-	y = 0.f;
+Ball::Ball(float radius, float x, float y) {
+	this->x = x;
+	this->y = y;
 	z = -8.f;
 	width = radius;
 	height = radius;
@@ -28,35 +28,36 @@ Ball::Ball(float radius) {
 	renderer->setPosition(x, y, z);
 }
 
-Ball::~Ball() {
-	delete renderer;
-}
-
 void Ball::update() {
 	list<Line*> worldLines = {};
-	list<GameObject*>::iterator it;
-    for (it = Controller::gameObjects.begin(); it != Controller::gameObjects.end(); ++it) {
-    	if ((*it)->getId() != this->getId()) {
-	        lines.insert(worldLines.end(), (*it)->lines.begin(), (*it)->lines.end());
+    map<int, GameObject*>::iterator it;
+    for (it = GameObject::gameObjects.begin(); it != GameObject::gameObjects.end(); ++it) {
+    	if (!it->second->deleted && it->second->getId() != this->getId()) {
+	        lines.insert(worldLines.end(), it->second->lines.begin(), it->second->lines.end());
 	    }
     }
 
+    int collided = -1;
     bool vCollision = false;
     bool hCollision = false;
     list<Line*>::iterator ballLine, worldLine;
     for (worldLine = worldLines.begin(); worldLine != worldLines.end(); ++worldLine) {
     	for (ballLine = lines.begin(); ballLine != lines.end(); ++ballLine) {
     		if ((*ballLine)->intersects(**worldLine)) {
+    			collided = (*worldLine)->ownerId;
     			if ((*ballLine)->isVertical) {
     				vCollision = true;
-    				break;
     			} else {
     				hCollision = true;
-    				break;
     			}
+    			break;
     		}
     	}
     }
+
+	if (collided != -1 && GameObject::gameObjects.find(collided) != GameObject::gameObjects.end()) {
+		GameObject::gameObjects[collided]->collide(this);
+	}
 
     if (vCollision) xSpeed *= -1;
     if (hCollision) ySpeed *= -1;
@@ -65,4 +66,5 @@ void Ball::update() {
 	
 	renderer->setPosition(x, y, z);
 	this->updateCollisionLogic();
+
 }

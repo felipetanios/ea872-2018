@@ -3,7 +3,6 @@
 class Platform : public GameObject {
 public:
     Platform();
-    ~Platform();
     void moveRight();
     void moveLeft();
 };

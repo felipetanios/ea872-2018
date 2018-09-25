@@ -2,21 +2,23 @@
 
 #define COLLISION_THRESHOLD 0.01f
 
-Line* Line::getVertical(float x, float y1, float y2) {
+Line* Line::getVertical(float x, float y1, float y2, int ownerId) {
 	Line* newLine = new Line();
 	newLine->isVertical = true;
 	newLine->vertical.x = x;
 	newLine->vertical.y1 = y1;
 	newLine->vertical.y2 = y2;
+	newLine->ownerId = ownerId;
 	return newLine;
 }
 
-Line* Line::getHorizontal(float y, float x1, float x2) {
+Line* Line::getHorizontal(float y, float x1, float x2, int ownerId) {
 	Line* newLine = new Line();
 	newLine->isVertical = false;
 	newLine->horizontal.y = y;
 	newLine->horizontal.x1 = x1;
 	newLine->horizontal.x2 = x2;
+	newLine->ownerId = ownerId;
 	return newLine;
 }
 
@@ -97,4 +99,3 @@ bool Line::intersects(Line other) {
 }
 
 Line::Line() {}
-Line::~Line() {}

@@ -5,7 +5,6 @@
 
 
 Platform::Platform() {
-	this->setId();
 	x = 0.f;
 	y = -3.f;
 	z = -8.f;
@@ -22,10 +21,6 @@ Platform::Platform() {
 	renderer->setSize(width, height, depth);
 	renderer->setColor(r, g, b);
 	renderer->setPosition(x, y, z);
-}
-
-Platform::~Platform() {
-	delete renderer;
 }
 
 void Platform::moveRight() {

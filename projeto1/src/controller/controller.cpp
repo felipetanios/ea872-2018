@@ -1,44 +1,36 @@
 #include <controller/controller.hpp>
-#include <model/box.hpp>
+#include <model/brick.hpp>
+#include <cstdlib>
+#include <ctime>
 
 using namespace std;
 
-list<GameObject*> Controller::gameObjects = {};
-list<Renderer*> Controller::renderers = {};
-Ball *Controller::ball = new Ball(0.1f);
+Ball *Controller::ball;
 Platform *Controller::platform = new Platform();
 
 void Controller::init() {
+    srand(time(NULL));
+    Controller::ball = new Ball(0.1f, 2.5f - rand () % 5, -1.f);
 
-	Controller::gameObjects.push_back(ball);
-	Controller::gameObjects.push_back(platform);
 
-	// add limits
 	Box *ceiling = new Box(0.f, 3.5f, -8.f, 10.5f, .5f);
 	Box *leftWall = new Box(-5.f, -1.5f, -8.f, .5f, 10.f);
 	Box *rightWall = new Box(5.f, -1.5f, -8.f, .5f, 10.f);
     ceiling->renderer->r   = 0.4f; ceiling->renderer->g   = 0.4f; ceiling->renderer->b   = 0.4f;
     leftWall->renderer->r  = 0.4f; leftWall->renderer->g  = 0.4f; leftWall->renderer->b  = 0.4f;
     rightWall->renderer->r = 0.4f; rightWall->renderer->g = 0.4f; rightWall->renderer->b = 0.4f;
-	Controller::gameObjects.push_back(ceiling);
-	Controller::gameObjects.push_back(leftWall);
-	Controller::gameObjects.push_back(rightWall);
 
-    // add random boxes
-    Controller::gameObjects.push_back(new Box(1.f, 0.f, -8.f, 1.f, 2.f));
-    // Controller::gameObjects.push_back(new Box(0.f, -2.f, -8.f, 1.f, 2.f));
-    // Controller::gameObjects.push_back(new Box(1.f, 0.f, -6.f, 1.f, 2.f));
-
-	list<GameObject*>::iterator it;
-    for (it = Controller::gameObjects.begin(); it != Controller::gameObjects.end(); ++it) {
-        Controller::renderers.push_back((*it)->renderer);
+    for (int i=-7; i<=7; i++) {
+        for (int j=0; j<5; j++) {
+            Brick *brick = new Brick(i * .6f, 2.5f - j*.5f);
+        }
     }
 }
 
 void Controller::update() {
-    list<GameObject*>::iterator it;
-    for (it = Controller::gameObjects.begin(); it != Controller::gameObjects.end(); ++it) {
-        (*it)->update();
+    map<int, GameObject*>::iterator it1;
+    for (it1 = GameObject::gameObjects.begin(); it1 != GameObject::gameObjects.end(); ++it1) {
+        it1->second->update();
     }
 }
 

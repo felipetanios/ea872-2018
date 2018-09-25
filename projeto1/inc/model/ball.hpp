@@ -7,8 +7,7 @@ class Ball : public GameObject {
 public:
 	double xSpeed;
 	double ySpeed;
-    Ball(float radius);
-    ~Ball();
+    Ball(float radius, float x, float y);
     void update();
 };
 #endif

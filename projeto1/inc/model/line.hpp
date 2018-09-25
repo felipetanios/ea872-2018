@@ -7,6 +7,7 @@ using namespace std;
 class Line {
 public:
 	bool isVertical;
+	int ownerId;
 	union {
 		struct {
 			float x, y1, y2;
@@ -16,9 +17,8 @@ public:
 		} horizontal;
 	};
 	bool intersects(Line other);
-	static Line* getVertical(float x, float y1, float y2);
-	static Line* getHorizontal(float y, float x1, float x2);
-	~Line();
+	static Line* getVertical(float x, float y1, float y2, int ownerId);
+	static Line* getHorizontal(float y, float x1, float x2, int ownerId);
 
 private:
 	Line();

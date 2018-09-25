@@ -22,6 +22,5 @@ public:
 	static void redisplay();
 	static void mainLoop();
 	static list<Renderer*> renderers;
-
 };
 #endif
