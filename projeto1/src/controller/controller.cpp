@@ -12,6 +12,8 @@ Platform *Controller::platform = new Platform();
 void Controller::init() {
     srand(time(NULL));
     Controller::ball = new Ball(0.1f, 2.5f - rand () % 5, -1.f);
+    Controller::ball = new Ball(0.1f, 2.5f - rand () % 5, -1.f);
+    Controller::ball = new Ball(0.1f, 2.5f - rand () % 5, -1.f);
 
 
 	Box *ceiling = new Box(0.f, 3.5f, -8.f, 10.5f, .5f);
@@ -38,11 +40,37 @@ void Controller::update() {
 
 void Controller::readKeyboardInput(unsigned char key, int x, int y) {
     switch(key) {
-        case 'a':
+        case 'A':
+        case 'a': {
             platform->moveLeft();
             break;
-        case 'd':
+        }
+        case 'D':
+        case 'd': {
             platform->moveRight();
+            break;
+        }
+        case 'B':
+        case 'b': {
+            Ball *newBall = new Ball(0.1f, 2.5f - rand () % 5, -1.f);
+            break;
+        }
+        case 'R':
+        case 'r': {
+            for (int i=-7; i<=7; i++) {
+                for (int j=0; j<5; j++) {
+                    Brick *brick = new Brick(i * .6f, 2.5f - j*.5f);
+                }
+            }
+            break;
+        }
+        // case 'Q':
+        // case 'q': {
+        //     glutLeaveMainLoop();
+        //     break;
+        // }
+
+        default:
             break;
     }
 }
