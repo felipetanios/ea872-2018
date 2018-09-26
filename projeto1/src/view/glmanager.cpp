@@ -40,7 +40,7 @@ void GLManager::glDisplay() {
     glLightfv(GL_LIGHT0, GL_SPECULAR, light3pos);
     glLightModelfv(GL_LIGHT_MODEL_AMBIENT, lightmodel);
 
-    map<int, GameObject*>::iterator it;
+    map<int, shared_ptr<GameObject>>::iterator it;
     for (it = GameObject::gameObjects.begin(); it != GameObject::gameObjects.end(); ++it) {
         if (!it->second->deleted)
             it->second->renderer.render();

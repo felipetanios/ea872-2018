@@ -68,15 +68,16 @@ void Controller::init() {
 }
 
 void Controller::update() {
-    map<int, GameObject*>::iterator it1;
+    map<int, shared_ptr<GameObject>>::iterator it1;
     for (it1 = GameObject::gameObjects.begin(); it1 != GameObject::gameObjects.end(); ++it1) {
         it1->second->update();
     }
+
     GameObject::applyDeletions();
 
     //detects collision and make sound
     if (Controller::ball->collided == true){
-        // Controller::soundThreads.push_back(std::thread(threadSound, Controller::player, Controller::asample));
+        Controller::soundThreads.push_back(std::thread(threadSound, Controller::player, Controller::asample));
         printf("Colided\n");
         Controller::ball->collided = false;
     }

@@ -2,6 +2,7 @@
 #define LINE_TYPE
 
 #include <cmath>
+#include <memory>
 using namespace std;
 
 class Line {
@@ -17,8 +18,8 @@ public:
 		} horizontal;
 	};
 	bool intersects(Line other);
-	static Line* getVertical(float x, float y1, float y2, int ownerId);
-	static Line* getHorizontal(float y, float x1, float x2, int ownerId);
+	static shared_ptr<Line> getVertical(float x, float y1, float y2, int ownerId);
+	static shared_ptr<Line> getHorizontal(float y, float x1, float x2, int ownerId);
 
 private:
 	Line();

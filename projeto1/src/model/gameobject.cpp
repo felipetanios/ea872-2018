@@ -4,7 +4,7 @@ using namespace std;
 
 int GameObject::totalObjects = 0;
 
-map<int, GameObject*> GameObject::gameObjects = {};
+map<int, shared_ptr<GameObject>> GameObject::gameObjects = {};
 list<int> GameObject::toBeDeleted = {};
 
 GameObject::GameObject() {
@@ -33,7 +33,7 @@ void GameObject::updateCollisionLogic() {
     top = y + height / 2;
     bottom = y - height / 2;
 
-    while(!lines.empty()) delete lines.front(), lines.pop_front();
+    lines.clear();
 
     lines = { 
         Line::getVertical(left, top, bottom, this->getId()), 
@@ -56,7 +56,7 @@ void GameObject::applyDeletions() {
     list<int>::iterator it1;
     for (it1 = GameObject::toBeDeleted.begin(); it1 != GameObject::toBeDeleted.end(); ++it1) {
         int index = *it1;
-        map<int, GameObject*>::iterator it2;
+        map<int, shared_ptr<GameObject>>::iterator it2;
         it2 = GameObject::gameObjects.find(index);
         GameObject::gameObjects.erase(it2);
     }
@@ -65,5 +65,5 @@ void GameObject::applyDeletions() {
 
 int GameObject::setId() {
     this->id = GameObject::totalObjects++;
-    GameObject::gameObjects[this->id] = this;
+    GameObject::gameObjects[this->id] = shared_ptr<GameObject>(this);
 }

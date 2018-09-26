@@ -30,8 +30,8 @@ Ball::Ball(float radius, float x, float y) {
 }
 
 void Ball::update() {
-	list<Line*> worldLines = {};
-    map<int, GameObject*>::iterator it;
+	list<shared_ptr<Line>> worldLines = {};
+    map<int, shared_ptr<GameObject>>::iterator it;
     for (it = GameObject::gameObjects.begin(); it != GameObject::gameObjects.end(); ++it) {
     	if (!it->second->deleted && it->second->getId() != this->getId()) {
 	        lines.insert(worldLines.end(), it->second->lines.begin(), it->second->lines.end());
@@ -41,7 +41,7 @@ void Ball::update() {
     int collidedElement = -1;
     bool vCollision = false;
     bool hCollision = false;
-    list<Line*>::iterator ballLine, worldLine;
+    list<shared_ptr<Line>>::iterator ballLine, worldLine;
     for (worldLine = worldLines.begin(); worldLine != worldLines.end(); ++worldLine) {
     	for (ballLine = lines.begin(); ballLine != lines.end(); ++ballLine) {
     		if ((*ballLine)->intersects(**worldLine)) {

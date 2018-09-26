@@ -5,13 +5,14 @@
 #include <model/line.hpp>
 #include <list>
 #include <map>
+#include <memory>
 
 using namespace std;
 
 class GameObject {
 public:
     static int getTotalObjects();
-    static map<int, GameObject*> gameObjects;
+    static map<int, shared_ptr<GameObject>> gameObjects;
     static void applyDeletions();
 
     bool deleted = false;
@@ -25,7 +26,7 @@ public:
     
     // collision logic
     float left, right, top, bottom;
-    list<Line*> lines;
+    list<shared_ptr<Line>> lines;
     virtual void updateCollisionLogic();
     virtual void collide();
 
