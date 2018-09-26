@@ -19,15 +19,20 @@ Ball *Controller::ball = new Ball(0.1f);
 Platform *Controller::platform = new Platform();
 list<thread> Controller::soundThreads = {};
 
+
 //init audio
 //Audio::Sample *Controller::asample;
-Sample *Controller::asample = new Sample();
+Sample *Controller::asample;
 
 //Audio::Player *Controller::player;
-Player *Controller::player = new Player();
+Player *Controller::player;
 
 void Controller::init() {
+    Controller::asample = new Sample();
+    Controller::player = new Player();
     Controller::asample->load("assets/blip.dat");
+    Controller::player->init();
+    Controller::player->pause();
 	Controller::gameObjects.push_back(ball);
 	Controller::gameObjects.push_back(platform);
 
@@ -60,9 +65,9 @@ void Controller::update() {
 }
 
 void threadSound (Player *player, Sample *asample) {
+
     uint64_t t0, t1;
 
-    player->init();
     asample->set_position(0);
     player->play(asample);
 
@@ -73,9 +78,9 @@ void threadSound (Player *player, Sample *asample) {
 
         if (t1-t0 > 500) break;
     }
-
+    player->pause();
     //Controller::asample->set_position(0);
-    player->stop();
+    // player->stop();
 }
 
 void Controller::readKeyboardInput(unsigned char key, int x, int y) {

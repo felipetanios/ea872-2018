@@ -12,6 +12,7 @@ using namespace Audio;
 class Controller {
 public:
 	static list<thread> soundThreads;
+	// static bool playSound;
 	static list<GameObject*> gameObjects;
 	static list<Renderer*> renderers;
 	static Platform *platform;
