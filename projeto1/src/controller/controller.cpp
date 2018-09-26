@@ -17,7 +17,7 @@ list<GameObject*> Controller::gameObjects = {};
 list<Renderer*> Controller::renderers = {};
 Ball *Controller::ball = new Ball(0.1f);
 Platform *Controller::platform = new Platform();
-
+thread Controller::soundThread = {};
 
 //init audio
 //Audio::Sample *Controller::asample;
@@ -53,8 +53,8 @@ void Controller::update() {
     }
     //detects collision and make sound
     if (Controller::ball->collided == true){
-        std::thread newthread(threadSound, &(Controller::player), &(Controller::asample));
-        soundThread.swap(newthread);
+        std::thread newthread(threadSound, Controller::player, Controller::asample);
+        Controller::soundThread.swap(newthread);
         
         printf("Colided\n");
         Controller::ball->collided = false;

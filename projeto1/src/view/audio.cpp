@@ -1,5 +1,9 @@
-
-#include "RtAudio.h"
+#ifdef __linux__
+  #include <rtaudio/RtAudio.h>
+#endif
+#ifdef TARGET_OS_MAC
+  #include <RtAudio.h>
+#endif
 #include <iostream>
 #include <fstream>
 #include <sstream>
