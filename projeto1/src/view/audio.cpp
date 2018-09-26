@@ -40,6 +40,7 @@ void Sample::load(const char *filename) {
   }
 
   while (std::getline(input_file, buffer) ) {
+    // std::cout << buffer <<std::endl;
     std::stringstream(buffer) >> fdata;
     (this->data).push_back(fdata);
     count ++;
@@ -93,8 +94,12 @@ int mix_and_play (const void *inputBuffer, void *outputBuffer,
   float *buffer = (float *) outputBuffer;
   Sample *s;
   s = player->get_data();
+  // std::cout << s << std::endl;
   if (s != NULL) {
     std::vector<float> data = s->get_data();
+    for (auto i : data){
+      std::cout << i << std::endl;
+    }
     unsigned int pos = s->get_position();
 
     // Fill the buffer with samples!
@@ -106,6 +111,9 @@ int mix_and_play (const void *inputBuffer, void *outputBuffer,
       i++;
       pos+=2;
     }
+    std::cout<<buffer[0]<<std::endl;
+    std::cout<<buffer[1]<<std::endl;
+
     s->set_position(pos);
   }
   return 0;
