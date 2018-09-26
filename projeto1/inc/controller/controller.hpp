@@ -5,14 +5,13 @@
 #include <iostream>
 #include <chrono>
 #include <thread>
-#include <vector>
 
 using namespace std;
 using namespace Audio;
 
 class Controller {
 public:
-	static thread soundThread;
+	static list<thread> soundThreads;
 	static list<GameObject*> gameObjects;
 	static list<Renderer*> renderers;
 	static Platform *platform;
