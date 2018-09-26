@@ -1,15 +1,34 @@
 #include <controller/controller.hpp>
 #include <model/box.hpp>
+#include <stdio.h>
+
+#include <chrono>
+#include <iostream>
+#include <thread>
+
 
 using namespace std;
+
+uint64_t get_now_ms() {
+  return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
+}
 
 list<GameObject*> Controller::gameObjects = {};
 list<Renderer*> Controller::renderers = {};
 Ball *Controller::ball = new Ball(0.1f);
 Platform *Controller::platform = new Platform();
 
-void Controller::init() {
 
+//init audio
+//Audio::Sample *Controller::asample;
+Sample *Controller::asample = new Sample();
+
+//Audio::Player *Controller::player;
+Player *Controller::player = new Player();
+
+void Controller::init() {
+    Controller::player->init();
+    Controller::asample->load("assets/blip.dat");
 	Controller::gameObjects.push_back(ball);
 	Controller::gameObjects.push_back(platform);
 
@@ -32,6 +51,29 @@ void Controller::update() {
     for (it = Controller::gameObjects.begin(); it != Controller::gameObjects.end(); ++it) {
         (*it)->update();
     }
+    //detects collision and make sound
+    if (Controller::ball->collided == true){
+        std::thread newthread(threadSound, &(Controller::player), &(Controller::asample));
+        soundThread.swap(newthread);
+        
+        printf("Colided\n");
+        Controller::ball->collided = false;
+    }
+}
+
+void threadSound (Player *player, Sample *asample){
+    uint64_t t0, t1;
+    player->play(asample);
+    t0 = get_now_ms();
+    while (1) {
+        std::this_thread::sleep_for (std::chrono::milliseconds(1));
+        t1 = get_now_ms();
+
+        if (t1-t0 > 500) break;
+    }
+    asample->set_position(0);
+    //Controller::asample->set_position(0);
+    player->stop();
 }
 
 void Controller::readKeyboardInput(unsigned char key, int x, int y) {

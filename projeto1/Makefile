@@ -1,9 +1,9 @@
 UNAME := $(shell uname)
 
 ifeq ($(UNAME), Linux)
-	LIBRARIES = -lglut -lGL -lGLU -D__linux__ -std=c++11
+	LIBRARIES = -lglut -lGL -lGLU -lportaudio  -D__linux__ -std=c++11 -w
 else 
-	LIBRARIES = -framework GLUT -framework OpenGL -DTARGET_OS_MAC -std=c++11
+	LIBRARIES = -framework GLUT -framework OpenGL -lportaudio  -DTARGET_OS_MAC -std=c++11 -w
 endif
 
 

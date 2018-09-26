@@ -21,6 +21,7 @@ Ball::Ball(float radius) {
 	b = 0.f;
 	xSpeed = 0.05f;
 	ySpeed = 0.05f;
+	collided = false;
 
 	renderer = new SphereRenderer();
 	renderer->setSize(width, height, depth);
@@ -68,6 +69,9 @@ void Ball::update() {
     }
     if (hCollision) ySpeed *= -1;
 
+    if (vCollision == true || hCollision == true ){
+    	collided = true;
+    }
 
 	x += xSpeed;
 	y += ySpeed;
