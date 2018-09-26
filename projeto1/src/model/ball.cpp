@@ -21,6 +21,7 @@ Ball::Ball(float radius, float x, float y) {
 	b = 0.f;
 	xSpeed = 0.05f;
 	ySpeed = 0.05f;
+	collided = false;
 
 	renderer = SphereRenderer();
 	renderer.setSize(width, height, depth);
@@ -37,14 +38,14 @@ void Ball::update() {
 	    }
     }
 
-    int collided = -1;
+    int collidedElement = -1;
     bool vCollision = false;
     bool hCollision = false;
     list<Line*>::iterator ballLine, worldLine;
     for (worldLine = worldLines.begin(); worldLine != worldLines.end(); ++worldLine) {
     	for (ballLine = lines.begin(); ballLine != lines.end(); ++ballLine) {
     		if ((*ballLine)->intersects(**worldLine)) {
-    			collided = (*worldLine)->ownerId;
+    			collidedElement = (*worldLine)->ownerId;
     			if ((*ballLine)->isVertical) {
     				vCollision = true;
     			} else {
@@ -55,9 +56,13 @@ void Ball::update() {
     	}
     }
 
-	if (collided != -1 && GameObject::gameObjects.find(collided) != GameObject::gameObjects.end()) {
-		GameObject::gameObjects[collided]->collide();
+	if (collidedElement != -1 && GameObject::gameObjects.find(collidedElement) != GameObject::gameObjects.end()) {
+		GameObject::gameObjects[collidedElement]->collide();
+		collided = true;
 	}
+    if (vCollision == true || hCollision == true ){
+    	collided = true;
+    }
 
     if (vCollision) xSpeed *= -1;
     if (hCollision) ySpeed *= -1;
