@@ -26,7 +26,6 @@ class Sample {
 class Player {
   private:
     Sample *audio_sample;
-    bool playing;
 
     PaStreamParameters  outputParameters;
     PaStream*           stream;
@@ -35,6 +34,7 @@ class Player {
 
 
   public:
+    bool playing;
     Player();
     ~Player();
 
