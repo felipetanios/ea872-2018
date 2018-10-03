@@ -21,5 +21,17 @@ To install portaudio you can use the following command on yout console window
 
 To install rt-audio you can use the following command on yout console window
 
-`sudo apt-get install librtaudio-dev
+`sudo apt-get install librtaudio-dev`
 `brew install rt-audio`
+
+To play you have to use the command
+`make play`
+
+To understand our directory structure:
+- inc/ = directory with .hpp files
+- src/ = directory with .cpp files
+in each directory we have 3 subdirectories:
+- model/
+- view/
+- controller/
+We used this structure to follow more carefully the MVC pattern

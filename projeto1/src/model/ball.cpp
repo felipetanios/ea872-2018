@@ -10,6 +10,7 @@ using namespace std;
 #define COLLISION_THRESHOLD 0.1f
 
 Ball::Ball(float radius, float x, float y) {
+	//creates the ball object with it renderer, position, color, size and speed
 	this->x = x;
 	this->y = y;
 	z = -8.f;
@@ -30,6 +31,10 @@ Ball::Ball(float radius, float x, float y) {
 }
 
 void Ball::update() {
+	//updates ball position
+	//to do that we check if it has colided with any wall of the boundaries walls first
+
+	//to do that we gather all the boundaries lines
 	list<shared_ptr<Line>> worldLines = {};
     map<int, shared_ptr<GameObject>>::iterator it;
     for (it = GameObject::gameObjects.begin(); it != GameObject::gameObjects.end(); ++it) {
@@ -38,6 +43,9 @@ void Ball::update() {
 	    }
     }
 
+    // after that we check if the ball has colided (intersected) with any walls within the boundaries walls list
+    //if it has collided, we can check if it is a vertial or horizontal collision
+    //it is important to do that so that we can change y and x speed direction at the end of the method
     int collidedElement = -1;
     bool vCollision = false;
     bool hCollision = false;
@@ -56,6 +64,7 @@ void Ball::update() {
     	}
     }
 
+    //afterwards, we set the collided flag to true (this is the flag that we use to generate the sound thread)
 	if (collidedElement != -1 && GameObject::gameObjects.find(collidedElement) != GameObject::gameObjects.end()) {
 		GameObject::gameObjects[collidedElement]->collide();
 		collided = true;
@@ -64,11 +73,13 @@ void Ball::update() {
     	collided = true;
     }
 
+    //the last step is (as said before) to change x and y speed because of the colisions
     if (vCollision) xSpeed *= -1;
     if (hCollision) ySpeed *= -1;
 	x += xSpeed;
 	y += ySpeed;
 	
+	//and finally we render the ball again
 	renderer.setPosition(x, y, z);
 	this->updateCollisionLogic();
 

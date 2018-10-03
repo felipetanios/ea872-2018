@@ -22,6 +22,8 @@ shared_ptr<Line> Line::getHorizontal(float y, float x1, float x2, int ownerId) {
 	return shared_ptr<Line>(newLine);
 }
 
+
+//method to check if two lines intersect (used for collision detection)
 bool Line::intersects(Line other) {
 	// first case: both are vertical
 	if (this->isVertical && other.isVertical) {

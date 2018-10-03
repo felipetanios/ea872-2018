@@ -5,6 +5,11 @@
 using namespace std;
 
 
+//this is the GLUT and OpenGL manager, it defines the position of lights, window,
+//defines our mainloop, reshape function and most importantly
+//defines that our idle function is the controller update, so
+//we can follow MVC pattern.
+
 void GLManager::init(int argc, char** argv, char name[]) {
 
 	glutInit(&argc, argv);            // Initialize GLUT

@@ -11,9 +11,12 @@ endif
 game:clean
 	g++ src/main.cpp ./src/model/* ./src/view/* ./src/controller/* -Iinc $(LIBRARIES) -o game
 
+play:game
+	./game
 	
-all: game
+all: play
 
 clean: 
 	rm game || echo "" > /dev/null;
+
 

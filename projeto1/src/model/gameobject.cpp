@@ -2,6 +2,11 @@
 #include <iostream>
 using namespace std;
 
+//this is the game object class
+//in our game everything is a gameobject object so box, ball, line and platform inherit from this class
+//so this class have general methods that creates the gameobject, destroys it, marks for deletion (used for bricks),
+//applies deletions and sets objects IDs (we used objects IDs so we could see which object we constructed and destroyed)
+
 int GameObject::totalObjects = 0;
 
 map<int, shared_ptr<GameObject>> GameObject::gameObjects = {};
@@ -13,9 +18,6 @@ GameObject::GameObject() {
 
 GameObject::~GameObject() {
     cout << "destroying game object " << (int)this->id << endl;
-    // while(!lines.empty()) delete lines.front(), lines.pop_front();
-    // delete renderer;
-    // delete GameObject::gameObjects[this->id];
 }
 
 int GameObject::getTotalObjects() {
