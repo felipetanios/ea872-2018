@@ -27,6 +27,9 @@ To install rt-audio you can use the following command on yout console window
 To play you have to use the command
 `make play`
 
+To open the client you have to use the command 
+`make client`
+
 To understand our directory structure:
 - inc/ = directory with .hpp files
 - src/ = directory with .cpp files

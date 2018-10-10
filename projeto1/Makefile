@@ -19,4 +19,8 @@ all: play
 clean: 
 	rm game || echo "" > /dev/null;
 
+buildClient:
+	gcc -lncurses client.c -o client
 
+client:buildClient
+	./client

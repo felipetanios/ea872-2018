@@ -18,5 +18,6 @@ public:
 	static void renderCube();
 	static void redisplay();
 	static void mainLoop();
+	static void exitGlut();
 };
 #endif

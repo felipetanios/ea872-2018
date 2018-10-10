@@ -94,3 +94,8 @@ void GLManager::redisplay() {
 void GLManager::mainLoop() {
 	glutMainLoop();
 }
+
+void GLManager::exitGlut() {
+    //glutLeaveMainLoop();
+    //exit(1);
+}

@@ -16,6 +16,7 @@ public:
 	static Ball *ball;
 	static Sample *asample;
 	static Player *player;
+	static thread keyboardThread;
 
 	static void init();
 	static void update();
@@ -24,3 +25,5 @@ public:
 };
 
 void threadSound (Player *player, Sample *asample);
+void threadServerKeyboard(Platform *platform);
+
