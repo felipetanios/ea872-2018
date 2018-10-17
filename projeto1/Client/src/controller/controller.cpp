@@ -1,5 +1,4 @@
 #include <controller/controller.hpp>
-#include <model/brick.hpp>
 #include <view/glmanager.hpp>
 #include <cstdlib>
 #include <ctime>
@@ -20,44 +19,29 @@
 
 using namespace std;
 
-uint64_t get_now_ms() {
-  return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
-}
-
-
-Ball *Controller::ball;
-Platform *Controller::platform = new Platform();
-list<thread> Controller::soundThreads = {};
+mutex Controller::mtx;
+queue<char> Controller::keyboardBuffer;
+thread Controller::networkThread;
 
 
 Sample *Controller::asample;
 Player *Controller::player;
 
-thread Controller::keyboardThread;
+
+uint64_t get_now_ms() {
+  return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
+}
 
 void Controller::init() {
     //instantiating ball, platform, bounderies of play enviroment, bricks to destroy, sound player, 
     //sound sample and the pointer to sound threads list
     srand(time(NULL));
-    Controller::ball = new Ball(0.1f, 2.5f - rand () % 5, -1.f);
-
-	Box *ceiling = new Box(0.f, 3.5f, -8.f, 10.5f, .5f);
-	Box *leftWall = new Box(-5.f, -1.5f, -8.f, .5f, 10.f);
-	Box *rightWall = new Box(5.f, -1.5f, -8.f, .5f, 10.f);
-    ceiling->renderer.r   = 0.4f; ceiling->renderer.g   = 0.4f; ceiling->renderer.b   = 0.4f;
-    leftWall->renderer.r  = 0.4f; leftWall->renderer.g  = 0.4f; leftWall->renderer.b  = 0.4f;
-    rightWall->renderer.r = 0.4f; rightWall->renderer.g = 0.4f; rightWall->renderer.b = 0.4f;
-
-    for (int i=-7; i<=7; i++) {
-        for (int j=0; j<5; j++) {
-            Brick *brick = new Brick(i * .6f, 2.5f - j*.5f);
-        }
-    }
-
+   
     Controller::asample = new Sample();
     Controller::player = new Player();
     Controller::asample->load("assets/blip.dat");
     Controller::player->init();
+
 
     uint64_t t0, t1;
     while (1) {
@@ -73,29 +57,11 @@ void Controller::init() {
     /*
     *Initiating keyboard server thread
     */
-    thread newthread(threadServerKeyboard, Controller::platform);
-    (Controller::keyboardThread).swap(newthread);
+    thread newthread(networkHandler);
+    (Controller::networkThread).swap(newthread);
 
 }
 
-void Controller::update() {
-    //update objects positions
-    map<int, shared_ptr<GameObject>>::iterator it1;
-    for (it1 = GameObject::gameObjects.begin(); it1 != GameObject::gameObjects.end(); ++it1) {
-        it1->second->update();
-    }
-
-    GameObject::applyDeletions();
-
-    //detects collision and make sound
-    if (Controller::ball->collided == true){
-        //when a collision is detected create a new thread that rouns a method to play the sound effect
-        Controller::soundThreads.push_back(std::thread(threadSound, Controller::player, Controller::asample));
-        printf("Colided\n");
-        Controller::ball->collided = false;
-    }
-    std::this_thread::sleep_for (std::chrono::milliseconds(1));
-}
 
 //this is the thread created to play the sound effect
 //it simply plays the sample object with the player object
@@ -115,92 +81,66 @@ void threadSound (Player *player, Sample *asample) {
     player->pause();
 }
 
-void threadServerKeyboard(Platform *platform){
-    int socket_fd, connection_fd;
-    struct sockaddr_in myself, client;
-    socklen_t client_size = (socklen_t)sizeof(client);
-    char input_buffer[50];
+void networkHandler(){
+    int conection_opened;
+    int socket_fd;
+    struct sockaddr_in target;
+    conection_opened = 1;
 
     socket_fd = socket(AF_INET, SOCK_STREAM, 0);
     printf("Socket criado\n");
 
-    myself.sin_family = AF_INET;
-    myself.sin_port = htons(3001);
-    inet_aton("127.0.0.1", &(myself.sin_addr));
-
-    printf("Tentando abrir porta 3001\n");
-    //bind(socket_fd, (struct sockaddr*)&myself, sizeof(myself));
-    //existe um outro metodo em std em c++11 que chama bind (WTF C++), essa eh a pra socketf
-    if (::bind(socket_fd, (struct sockaddr*)&myself, sizeof(myself)) < 0) {
-        printf("Problemas ao abrir porta\n");
-        //return 0;
+    target.sin_family = AF_INET;
+    target.sin_port = htons(3001);
+    inet_aton("127.0.0.1", & (target.sin_addr));
+    printf("Tentando conectar\n");
+    if (connect(socket_fd, (struct sockaddr * ) & target, sizeof(target)) != 0) {
+        printf("Problemas na conexao\n");
+        return;
     }
-    printf("Abri porta 3001!\n");
 
-    listen(socket_fd, 2);
-    printf("Estou ouvindo na porta 3001!\n");
+    printf("Conectei ao servidor\n");
 
-    while (1) {
-        printf("Vou travar ate receber alguma coisa\n");
-        connection_fd = accept(socket_fd, (struct sockaddr*)&client, &client_size);
-        recv(connection_fd, input_buffer, 2, 0);
-        printf("Recebi uma mensagem: %s\n", input_buffer);
+    printf("fim da configuarcao\n");
 
-        // /* Identificando cliente */
-        // char ip_client[INET_ADDRSTRLEN];
-        // inet_ntop( AF_INET, &(client.sin_addr), ip_client, INET_ADDRSTRLEN );
-        // printf("IP que enviou: %s\n", ip_client);
+    
+    while (1){
+        char c = -1;
+        Controller::mtx.lock();
+        if (!Controller::keyboardBuffer.empty()){
+            c = Controller::keyboardBuffer.front();
+            Controller::keyboardBuffer.pop();
+        }
+        Controller::mtx.unlock();
 
-        /* Respondendo */
-        // printf("Enviando mensagem de retorno\n");
+        char msg[2] = "\0";
 
-        switch(input_buffer[0]) {
-            //if a is pressed, the platform moves to the left
-            case 'A':
-            case 'a': {
-                platform->moveLeft();
-                break;
-            }
-            //if d is pressed, the platform moves to the right
-            case 'D':
-            case 'd': {
-                platform->moveRight();
-                break;
-            }
-            //if b is pressed, another ball appears in a random place (within a limiter of positions)
-            case 'B':
-            case 'b': {
-                Ball *newBall = new Ball(0.1f, 2.5f - rand () % 5, -1.f);
-                break;
-            }
-            //if r is pressed, the creates all the bricks again (instatiate new objects)
-            case 'R':
-            case 'r': {
-                for (int i=-7; i<=7; i++) {
-                    for (int j=0; j<5; j++) {
-                        Brick *brick = new Brick(i * .6f, 2.5f - j*.5f);
-                    }
-                }
-                break;
-            }
-            case 'Q':
-            case 'q': {
-                GLManager::exitGlut();
-                break;
-            }
 
-            default:
-                break;
+        if (c == -1)
+            continue;
+        
+        msg[0] = c;
+
+        // printf("essa é a entrada: %c, %d\n", c, c);
+
+        if (c == 'q' || c == 'Q') {
+            break;
         }
 
-        if (send(connection_fd, input_buffer, 2, 0) < 0) {
-            printf("Erro ao enviar mensagem de retorno\n");
-        } else {
-            printf("Sucesso para enviar mensagem de retorno\n");
-        }
+        printf("mensagem: %s\n", msg);
+        /* Agora, meu socket funciona como um descritor de arquivo usual */
+        auto retVal = send(socket_fd, msg, 1, 0);
+        cout<<retVal<<endl;
+        // printf("Escrevi mensagem de ping!\n");
+        //sleep(1);
+
+        /* Recebendo resposta */
+        //char reply[10];
+        //recv(socket_fd, reply, 10, 0);
+        //printf("Resposta:\n%s\n", reply);
         std::this_thread::sleep_for (std::chrono::milliseconds(1));
-    }
 
+    }
     close(socket_fd);
 
 }
@@ -208,42 +148,7 @@ void threadServerKeyboard(Platform *platform){
 
 void Controller::readKeyboardInput(unsigned char key, int x, int y) {
     //read keyboard inputs that controlls the platform, create more balls and more brics to break
-    switch(key) {
-        //if a is pressed, the platform moves to the left
-        case 'A':
-        case 'a': {
-            platform->moveLeft();
-            break;
-        }
-        //if d is pressed, the platform moves to the right
-        case 'D':
-        case 'd': {
-            platform->moveRight();
-            break;
-        }
-        //if b is pressed, another ball appears in a random place (within a limiter of positions)
-        case 'B':
-        case 'b': {
-            Ball *newBall = new Ball(0.1f, 2.5f - rand () % 5, -1.f);
-            break;
-        }
-        //if r is pressed, the creates all the bricks again (instatiate new objects)
-        case 'R':
-        case 'r': {
-            for (int i=-7; i<=7; i++) {
-                for (int j=0; j<5; j++) {
-                    Brick *brick = new Brick(i * .6f, 2.5f - j*.5f);
-                }
-            }
-            break;
-        }
-        case 'Q':
-        case 'q': {
-            GLManager::exitGlut();
-            break;
-        }
-
-        default:
-            break;
-    }
+    Controller::mtx.lock();
+    Controller::keyboardBuffer.push(key);
+    Controller::mtx.unlock();
 }

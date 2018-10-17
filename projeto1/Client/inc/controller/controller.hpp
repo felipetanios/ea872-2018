@@ -1,6 +1,5 @@
 #include <list>
-#include <model/platform.hpp>
-#include <model/ball.hpp>
+#include <queue>
 #include <view/audio.hpp>
 #include <iostream>
 #include <chrono>
@@ -12,18 +11,17 @@ using namespace Audio;
 class Controller {
 public:
 	static list<thread> soundThreads;
-	static Platform *platform;
-	static Ball *ball;
+	static mutex mtx;
+	static queue<char> keyboardBuffer;
 	static Sample *asample;
 	static Player *player;
-	static thread keyboardThread;
+	static thread networkThread;
+	
 
 	static void init();
-	static void update();
 	static void readKeyboardInput(unsigned char key, int x, int y);
 
 };
 
 void threadSound (Player *player, Sample *asample);
-void threadServerKeyboard(Platform *platform);
-
+void networkHandler();

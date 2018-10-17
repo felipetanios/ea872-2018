@@ -30,34 +30,33 @@ int main() {
 
     initscr();
     //noecho();
-    while (1){
-        char msg[2] = "";
-        char c = getch();
-        printf("essa é a entrada: %c, %d\n", c, c);
-
+    char msg[2] = "";
+    char c = getch();
+    printf("essa é a entrada: %c, %d\n", c, c);
+    if (c == -1) {
+        continue;
+    } 
+    else
         msg[0] = c;
+    
+    printf("essa é a entrada: %c, %d\n", c, c);
 
-        printf("essa é a entrada: %c, %d\n", c, c);
-
-        if (c == 'q' || c == 'Q') {
-            conection_opened = 0;
-            break;
-        }
-
-        printf("mensagem: %s\n", msg);
-        /* Agora, meu socket funciona como um descritor de arquivo usual */
-        send(socket_fd, msg, 2, 0);
-        // printf("Escrevi mensagem de ping!\n");
-        sleep(1);
-
-        /* Recebendo resposta */
-        char reply[10];
-        recv(socket_fd, reply, 10, 0);
-        printf("Resposta:\n%s\n", reply);
-
+    if (c == 'q' || c == 'Q') {
+        conection_opened = 0;
     }
-    close(socket_fd);
 
+    printf("mensagem: %s\n", msg);
+    /* Agora, meu socket funciona como um descritor de arquivo usual */
+    send(socket_fd, msg, 2, 0);
+    // printf("Escrevi mensagem de ping!\n");
+    sleep(1);
+
+    /* Recebendo resposta */
+    char reply[10];
+    recv(socket_fd, reply, 10, 0);
+    printf("Resposta:\n%s\n", reply);
+
+    close(socket_fd);
 
     return 0;
 }

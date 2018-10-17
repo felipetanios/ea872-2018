@@ -143,7 +143,7 @@ void threadServerKeyboard(Platform *platform){
     while (1) {
         printf("Vou travar ate receber alguma coisa\n");
         connection_fd = accept(socket_fd, (struct sockaddr*)&client, &client_size);
-        recv(connection_fd, input_buffer, 2, 0);
+        recv(connection_fd, input_buffer, 1, 0);
         printf("Recebi uma mensagem: %s\n", input_buffer);
 
         // /* Identificando cliente */
@@ -193,11 +193,11 @@ void threadServerKeyboard(Platform *platform){
                 break;
         }
 
-        if (send(connection_fd, input_buffer, 2, 0) < 0) {
-            printf("Erro ao enviar mensagem de retorno\n");
-        } else {
-            printf("Sucesso para enviar mensagem de retorno\n");
-        }
+        // if (send(connection_fd, input_buffer, 2, 0) < 0) {
+        //     printf("Erro ao enviar mensagem de retorno\n");
+        // } else {
+        //     printf("Sucesso para enviar mensagem de retorno\n");
+        // }
         std::this_thread::sleep_for (std::chrono::milliseconds(1));
     }
 
