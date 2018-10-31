@@ -35,6 +35,9 @@ Player *Controller::player;
 
 thread Controller::keyboardThread;
 
+map<int, thread> Controller::connection;
+
+
 void Controller::init() {
     //instantiating ball, platform, bounderies of play enviroment, bricks to destroy, sound player, 
     //sound sample and the pointer to sound threads list
@@ -73,7 +76,7 @@ void Controller::init() {
     /*
     *Initiating keyboard server thread
     */
-    thread newthread(threadServerKeyboard, Controller::platform);
+    std::thread newthread(threadServerKeyboard, Controller::platform);
     (Controller::keyboardThread).swap(newthread);
 
 }
@@ -129,30 +132,44 @@ void threadServerKeyboard(Platform *platform){
     inet_aton("127.0.0.1", &(myself.sin_addr));
 
     printf("Tentando abrir porta 3001\n");
-    //bind(socket_fd, (struct sockaddr*)&myself, sizeof(myself));
-    //existe um outro metodo em std em c++11 que chama bind (WTF C++), essa eh a pra socketf
+
     if (::bind(socket_fd, (struct sockaddr*)&myself, sizeof(myself)) < 0) {
         printf("Problemas ao abrir porta\n");
-        //return 0;
     }
     printf("Abri porta 3001!\n");
 
     listen(socket_fd, 2);
     printf("Estou ouvindo na porta 3001!\n");
 
+    
+    //connection_fd = accept(socket_fd, (struct sockaddr*)&client, &client_size);
+
+    while (1){
+        int connectionID = accept(socket_fd, (struct sockaddr*)&client, &client_size);
+        if (connectionID >= 0){
+            Controller::connections[connectionID] = thread(Controller::connectionHandler, connectionID);
+
+
+            // std::thread newthread(threadServerKeyboard, Controller::platform);
+            // (Controller::keyboardThread).swap(newthread);
+        }
+    }
+   
+
+    close(socket_fd);
+
+}
+
+void Controller::connectionHandler(int connectionID){
     while (1) {
         printf("Vou travar ate receber alguma coisa\n");
-        connection_fd = accept(socket_fd, (struct sockaddr*)&client, &client_size);
         recv(connection_fd, input_buffer, 1, 0);
         printf("Recebi uma mensagem: %s\n", input_buffer);
 
-        // /* Identificando cliente */
-        // char ip_client[INET_ADDRSTRLEN];
-        // inet_ntop( AF_INET, &(client.sin_addr), ip_client, INET_ADDRSTRLEN );
-        // printf("IP que enviou: %s\n", ip_client);
-
-        /* Respondendo */
-        // printf("Enviando mensagem de retorno\n");
+        /* Identificando cliente */
+        char ip_client[INET_ADDRSTRLEN];
+        inet_ntop( AF_INET, &(client.sin_addr), ip_client, INET_ADDRSTRLEN );
+        printf("IP que enviou: %s\n", ip_client);
 
         switch(input_buffer[0]) {
             //if a is pressed, the platform moves to the left
@@ -188,21 +205,12 @@ void threadServerKeyboard(Platform *platform){
                 GLManager::exitGlut();
                 break;
             }
-
+    
             default:
                 break;
         }
-
-        // if (send(connection_fd, input_buffer, 2, 0) < 0) {
-        //     printf("Erro ao enviar mensagem de retorno\n");
-        // } else {
-        //     printf("Sucesso para enviar mensagem de retorno\n");
-        // }
         std::this_thread::sleep_for (std::chrono::milliseconds(1));
     }
-
-    close(socket_fd);
-
 }
 
 

@@ -17,13 +17,14 @@ public:
 	static Sample *asample;
 	static Player *player;
 	static thread keyboardThread;
+	static map<int, thread> connection;
 
 	static void init();
 	static void update();
 	static void readKeyboardInput(unsigned char key, int x, int y);
+	static void connectionHandler(int connectionID);
 
 };
 
 void threadSound (Player *player, Sample *asample);
 void threadServerKeyboard(Platform *platform);
-
