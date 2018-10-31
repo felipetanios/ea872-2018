@@ -1,5 +1,7 @@
 #include <controller/controller.hpp>
 #include <view/glmanager.hpp>
+#include <view/cuberenderer.hpp>
+#include <view/sphererenderer.hpp>
 #include <cstdlib>
 #include <ctime>
 #include <iostream>
@@ -19,53 +21,120 @@
 
 using namespace std;
 
+#define ever ;;
+
 mutex Controller::mtx;
 queue<char> Controller::keyboardBuffer;
-thread Controller::networkThread;
-
 
 Sample *Controller::asample;
 Player *Controller::player;
 
+int Controller::socketId;
+int Controller::connectionId;
+thread Controller::senderThread;
+thread Controller::receiverThread;
+list<thread> Controller::soundThreads;
+
+map<int, Renderer> Controller::renderers;
 
 uint64_t get_now_ms() {
   return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
 }
 
 void Controller::init() {
-    //instantiating ball, platform, bounderies of play enviroment, bricks to destroy, sound player, 
-    //sound sample and the pointer to sound threads list
-    srand(time(NULL));
-   
+    // init sound 
     Controller::asample = new Sample();
     Controller::player = new Player();
     Controller::asample->load("assets/blip.dat");
     Controller::player->init();
 
-
     uint64_t t0, t1;
-    while (1) {
+    for(ever) {
         std::this_thread::sleep_for (std::chrono::milliseconds(1));
         t1 = get_now_ms();
 
         if (t1-t0 > 5000) break;
     }
-
     player->play(asample);
-    player->pause();
+    player->pause();    
 
-    /*
-    *Initiating keyboard server thread
-    */
-    thread newthread(networkHandler);
-    (Controller::networkThread).swap(newthread);
+    // init connection
+    int conection_opened;
+    struct sockaddr_in target;
+    conection_opened = 1;
 
+    Controller::socketId = socket(AF_INET, SOCK_STREAM, 0);
+    printf("Socket criado\n");
+
+    target.sin_family = AF_INET;
+    target.sin_port = htons(3001);
+    inet_aton("127.0.0.1", & (target.sin_addr));
+    printf("Tentando conectar\n");
+    if (connect(Controller::socketId, (struct sockaddr * ) & target, sizeof(target)) != 0) {
+        printf("Problemas na conexao\n");
+        return;
+    }
+
+    printf("Conectei ao servidor\n");
+
+    senderThread = thread(senderLoop);
+    receiverThread = thread(receiverLoop);
+}
+
+void Controller::receiverLoop() {
+    cout << "Iniciando thread de recepção" << endl;
+    for(ever) {
+        NetworkMessage msg;
+        int status = recv(Controller::connectionId, &msg, sizeof(msg), 0);
+        if (status < 0) {
+            cout << "'recv' error " << status << endl;
+            return;
+        }
+        int msgType = (int)msg.messageType;
+        switch (msgType) {
+            
+            case MessageType_NewObject: 
+                {
+                    int rendType = (int)msg.rendererType;
+                    Renderer newRenderer;
+                    switch (rendType) {
+                        case RendererType_Cube:
+                            newRenderer = CubeRenderer();
+                            break;
+                        case RendererType_Sphere:
+                            newRenderer = SphereRenderer();
+                            break;
+                    }
+                    newRenderer.setSize(msg.width, msg.height, msg.depth);
+                    newRenderer.setColor(msg.r, msg.g, msg.b);
+                    newRenderer.setPosition(msg.x, msg.y, msg.z);
+                    Controller::renderers[msg.objectId] = newRenderer;
+                }
+                break;
+            
+            case MessageType_NewPosition:
+                Controller::renderers[msg.objectId].setPosition(msg.x, msg.y, msg.z);
+                break;
+
+            case MessageType_Destroy:
+                Controller::renderers.erase(msg.objectId);
+                break;
+
+            case MessageType_PlaySound:
+                Controller::soundThreads.push_back(std::thread(threadSound, Controller::player, Controller::asample));
+                break;
+        }
+
+        std::this_thread::sleep_for (std::chrono::milliseconds(1));
+    }
+    cout << "Finalizano thread de recepção" << endl;
 }
 
 
 //this is the thread created to play the sound effect
 //it simply plays the sample object with the player object
-void threadSound (Player *player, Sample *asample) {
+void Controller::threadSound (Player *player, Sample *asample) {
+    cout << "Iniciando thread de som" << endl;
     uint64_t t0, t1;
     //it starts the sample to the beggining position then plays it, wait a little and finally pauses the player
     asample->set_position(0);
@@ -79,32 +148,12 @@ void threadSound (Player *player, Sample *asample) {
         if (t1-t0 > 500) break;
     }
     player->pause();
+    cout << "Finalizando thread de som" << endl;
 }
 
-void networkHandler(){
-    int conection_opened;
-    int socket_fd;
-    struct sockaddr_in target;
-    conection_opened = 1;
-
-    socket_fd = socket(AF_INET, SOCK_STREAM, 0);
-    printf("Socket criado\n");
-
-    target.sin_family = AF_INET;
-    target.sin_port = htons(3001);
-    inet_aton("127.0.0.1", & (target.sin_addr));
-    printf("Tentando conectar\n");
-    if (connect(socket_fd, (struct sockaddr * ) & target, sizeof(target)) != 0) {
-        printf("Problemas na conexao\n");
-        return;
-    }
-
-    printf("Conectei ao servidor\n");
-
-    printf("fim da configuarcao\n");
-
-    
-    while (1){
+void Controller::senderLoop() {
+    cout << "Iniciando thread de envio" << endl;
+    for(ever) {
         char c = -1;
         Controller::mtx.lock();
         if (!Controller::keyboardBuffer.empty()){
@@ -129,20 +178,20 @@ void networkHandler(){
 
         printf("mensagem: %s\n", msg);
         /* Agora, meu socket funciona como um descritor de arquivo usual */
-        auto retVal = send(socket_fd, msg, 1, 0);
+        auto retVal = send(Controller::socketId, msg, 1, 0);
         cout<<retVal<<endl;
         // printf("Escrevi mensagem de ping!\n");
         //sleep(1);
 
         /* Recebendo resposta */
         //char reply[10];
-        //recv(socket_fd, reply, 10, 0);
+        //recv(Controller::socketId, reply, 10, 0);
         //printf("Resposta:\n%s\n", reply);
         std::this_thread::sleep_for (std::chrono::milliseconds(1));
 
     }
-    close(socket_fd);
-
+    close(Controller::socketId);
+    cout << "Finalizando thread de envio" << endl;
 }
 
 
@@ -152,3 +201,5 @@ void Controller::readKeyboardInput(unsigned char key, int x, int y) {
     Controller::keyboardBuffer.push(key);
     Controller::mtx.unlock();
 }
+
+#undef ever
