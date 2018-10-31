@@ -22,7 +22,7 @@ public:
 	static void init();
 	static void update();
 	static void readKeyboardInput(unsigned char key, int x, int y);
-	static void connectionHandler(int connectionID);
+//	static void connectionHandler(int connectionID);
 
 };
 

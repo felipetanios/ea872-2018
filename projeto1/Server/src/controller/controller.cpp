@@ -145,23 +145,6 @@ void threadServerKeyboard(Platform *platform){
     //connection_fd = accept(socket_fd, (struct sockaddr*)&client, &client_size);
 
     while (1){
-        int connectionID = accept(socket_fd, (struct sockaddr*)&client, &client_size);
-        if (connectionID >= 0){
-            Controller::connections[connectionID] = thread(Controller::connectionHandler, connectionID);
-
-
-            // std::thread newthread(threadServerKeyboard, Controller::platform);
-            // (Controller::keyboardThread).swap(newthread);
-        }
-    }
-   
-
-    close(socket_fd);
-
-}
-
-void Controller::connectionHandler(int connectionID){
-    while (1) {
         printf("Vou travar ate receber alguma coisa\n");
         recv(connection_fd, input_buffer, 1, 0);
         printf("Recebi uma mensagem: %s\n", input_buffer);
@@ -211,7 +194,17 @@ void Controller::connectionHandler(int connectionID){
         }
         std::this_thread::sleep_for (std::chrono::milliseconds(1));
     }
+   
+
+    close(socket_fd);
+
 }
+
+// void Controller::connectionHandler(int connectionID){
+//     while (1) {
+        
+//     }
+// }
 
 
 void Controller::readKeyboardInput(unsigned char key, int x, int y) {
