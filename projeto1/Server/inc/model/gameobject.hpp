@@ -1,11 +1,11 @@
 #ifndef GAME_OBJECT
 #define GAME_OBJECT
 
-#include <view/renderer.hpp>
 #include <model/line.hpp>
 #include <list>
 #include <map>
 #include <memory>
+#include "../../../inc/datatypes.hpp"
 
 using namespace std;
 
@@ -18,12 +18,13 @@ public:
     bool deleted = false;
     int getId();
 
-	Renderer renderer; // view logic
     float x, y, z; // position
     float r, g, b; // color
     float width, height, depth; // size
     virtual void update();
     
+    RendererType rendererType;
+
     // collision logic
     float left, right, top, bottom;
     list<shared_ptr<Line>> lines;

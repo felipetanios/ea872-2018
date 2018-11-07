@@ -1,5 +1,4 @@
 #include <model/platform.hpp>
-#include <view/cuberenderer.hpp>
 
 #define MOVE_INCREMENT 0.3f
 
@@ -14,23 +13,17 @@ Platform::Platform() {
 	r = 1.f;
 	g = 0.f;
 	b = 0.f;
+    rendererType = RendererType_Cube;
 
 	this->updateCollisionLogic();
-
-	renderer = CubeRenderer();
-	renderer.setSize(width, height, depth);
-	renderer.setColor(r, g, b);
-	renderer.setPosition(x, y, z);
 }
 
 void Platform::moveRight() {
 	x += MOVE_INCREMENT;
 	this->updateCollisionLogic();
-	renderer.setPosition(x, y, z);
 }
 
 void Platform::moveLeft() {
 	x -= MOVE_INCREMENT;
 	this->updateCollisionLogic();
-	renderer.setPosition(x, y, z);
 }

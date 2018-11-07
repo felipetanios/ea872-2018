@@ -1,5 +1,4 @@
 #include <model/ball.hpp>
-#include <view/sphererenderer.hpp>
 #include <controller/controller.hpp>
 #include <list>
 #include <cmath>
@@ -23,11 +22,6 @@ Ball::Ball(float radius, float x, float y) {
 	xSpeed = 0.05f;
 	ySpeed = 0.05f;
 	collided = false;
-
-	renderer = SphereRenderer();
-	renderer.setSize(width, height, depth);
-	renderer.setColor(r, g, b);
-	renderer.setPosition(x, y, z);
 }
 
 void Ball::update() {
@@ -80,7 +74,6 @@ void Ball::update() {
 	y += ySpeed;
 	
 	//and finally we render the ball again
-	renderer.setPosition(x, y, z);
 	this->updateCollisionLogic();
 
 }

@@ -13,7 +13,7 @@ clean:
 	rm game || echo "" > /dev/null;
 
 game:clean
-	g++ src/main.cpp ./src/model/* ./src/view/* ./src/controller/* -Iinc $(LIBRARIES) -o game
+	g++ src/main.cpp ./src/model/* ./src/controller/* -Iinc $(LIBRARIES) -o game
 
 play:game
 	./game

@@ -1,5 +1,4 @@
 #include <model/box.hpp>
-#include <view/cuberenderer.hpp>
 
 Box::Box(float x, float y, float z, float width, float height) {	
 	//this class is a parent class of brick
@@ -13,12 +12,7 @@ Box::Box(float x, float y, float z, float width, float height) {
 	r = 0.f;
 	g = 0.f;
 	b = 1.f;
+    rendererType = RendererType_Cube;
 
 	this->updateCollisionLogic();
-
-	renderer = CubeRenderer();
-	renderer.setSize(this->width, this->height, depth);
-	renderer.setColor(r, g, b);
-	renderer.setPosition(this->x, this->y, this->z);
-
 }
