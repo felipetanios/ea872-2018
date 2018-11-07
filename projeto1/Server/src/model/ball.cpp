@@ -31,10 +31,10 @@ void Ball::update() {
 
 	//to do that we gather all the boundaries lines
 	list<shared_ptr<Line>> worldLines = {};
-    map<int, shared_ptr<GameObject>>::iterator it;
-    for (it = GameObject::gameObjects.begin(); it != GameObject::gameObjects.end(); ++it) {
-    	if (!it->second->deleted && it->second->getId() != this->getId()) {
-	        lines.insert(worldLines.end(), it->second->lines.begin(), it->second->lines.end());
+    map<int, GameObject>::iterator it;
+    for (it = Controller::gameObjects.begin(); it != Controller::gameObjects.end(); ++it) {
+    	if (!it->second.deleted && it->second.getId() != this->getId()) {
+	        lines.insert(worldLines.end(), it->second.lines.begin(), it->second.lines.end());
 	    }
     }
 
@@ -60,8 +60,8 @@ void Ball::update() {
     }
 
     //afterwards, we set the collided flag to true (this is the flag that we use to generate the sound thread)
-	if (collidedElement != -1 && GameObject::gameObjects.find(collidedElement) != GameObject::gameObjects.end()) {
-		GameObject::gameObjects[collidedElement]->collide();
+	if (collidedElement != -1 && Controller::gameObjects.find(collidedElement) != Controller::gameObjects.end()) {
+		Controller::gameObjects[collidedElement].collide();
 		collided = true;
 	}
     if (vCollision == true || hCollision == true ){

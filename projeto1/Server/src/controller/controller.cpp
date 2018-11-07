@@ -26,14 +26,14 @@ uint64_t get_now_ms() {
   return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
 }
 
-Ball *Controller::ball;
-Platform *Controller::platform;
-
 thread Controller::keyboardHandlerThread;
 thread Controller::messageSenderThread;
 
 queue<NetworkMessage> Controller::pendingMessages;
 mutex Controller::msgQueueMtx;
+
+map<int, GameObject> Controller::gameObjects;
+list<int> Controller::toBeDeleted;
 
 int Controller::sequence;
 
@@ -63,27 +63,27 @@ void Controller::init() {
     printf("Estou ouvindo na porta 3001!\n");
     connection_fd = accept(socket_fd, (struct sockaddr*)&client, &client_size);
 
-
+    printf("Conectado");
     
     //instantiating ball, platform, bounderies of play enviroment, bricks to destroy, sound player, 
     //sound sample and the pointer to sound threads list
     srand(time(NULL));
-    Controller::ball = new Ball(0.1f, 2.5f - rand () % 5, -1.f);
+    Controller::createBall(0.1f, 2.5f - rand () % 5, -1.f);
 
-	Box *ceiling = new Box(0.f, 3.5f, -8.f, 10.5f, .5f);
-	Box *leftWall = new Box(-5.f, -1.5f, -8.f, .5f, 10.f);
-	Box *rightWall = new Box(5.f, -1.5f, -8.f, .5f, 10.f);
+	Controller::createBox(0.f, 3.5f, -8.f, 10.5f, .5f);
+	Controller::createBox(-5.f, -1.5f, -8.f, .5f, 10.f);
+	Controller::createBox(5.f, -1.5f, -8.f, .5f, 10.f);
 
     for (int i=-7; i<=7; i++) {
         for (int j=0; j<5; j++) {
-            Brick *brick = new Brick(i * .6f, 2.5f - j*.5f);
+            Controller::createBrick(i * .6f, 2.5f - j*.5f);
         }
     }
 
     /*
     *Initiating keyboard server thread
     */
-    std::thread newKeyboardThread(Controller::keyboardHandler, Controller::platform, socket_fd, connection_fd, client);
+    std::thread newKeyboardThread(Controller::keyboardHandler, Controller::createPlatform(), socket_fd, connection_fd, client);
     std::thread newSenderThread(Controller::messageSender, socket_fd);
     (Controller::keyboardHandlerThread).swap(newKeyboardThread);
     (Controller::messageSenderThread).swap(newSenderThread);
@@ -91,21 +91,22 @@ void Controller::init() {
     for(ever) Controller::update();
 }
 
+
 void Controller::update() {
     //update objects positions
-    map<int, shared_ptr<GameObject>>::iterator it1;
-    for (it1 = GameObject::gameObjects.begin(); it1 != GameObject::gameObjects.end(); ++it1) {
-        it1->second->update();
+    map<int, GameObject>::iterator it1;
+    for (it1 = Controller::gameObjects.begin(); it1 != Controller::gameObjects.end(); ++it1) {
+        it1->second.update();
     }
 
-    GameObject::applyDeletions();
+    Controller::applyDeletions();
 
     //detects collision and make sound
-    if (Controller::ball->collided == true){
-        //when a collision is detected create a new thread that rouns a method to play the sound effect
-        printf("Colided\n");
-        Controller::ball->collided = false;
-    }
+    // if (Controller::ball->collided == true){
+    //     //when a collision is detected create a new thread that rouns a method to play the sound effect
+    //     printf("Colided\n");
+    //     Controller::ball->collided = false;
+    // }
     std::this_thread::sleep_for (std::chrono::milliseconds(1));
 }
 
@@ -116,12 +117,15 @@ void Controller::sendMessage(NetworkMessage msg) {
     Controller::msgQueueMtx.unlock();
 }
 
-void Controller::keyboardHandler(Platform *platform, int socket_fd, int connection_fd, struct sockaddr_in client){
+void Controller::keyboardHandler(int platformId, int socket_fd, int connection_fd, struct sockaddr_in client){
     for(ever){
         printf("Vou travar ate receber alguma coisa\n");
         char input_buffer[sizeof(NetworkMessage)];
         recv(connection_fd, input_buffer, 1, 0);
         printf("Recebi uma mensagem: %s\n", input_buffer);
+
+        GameObject platformGameObject = Controller::gameObjects[platformId];
+        Platform *platform = (Platform*)&platformGameObject;
 
         /* Identificando cliente */
         char ip_client[INET_ADDRSTRLEN];
@@ -144,7 +148,7 @@ void Controller::keyboardHandler(Platform *platform, int socket_fd, int connecti
             //if b is pressed, another ball appears in a random place (within a limiter of positions)
             case 'B':
             case 'b': {
-                Ball *newBall = new Ball(0.1f, 2.5f - rand () % 5, -1.f);
+                Controller::createBall(0.1f, 2.5f - rand () % 5, -1.f);
                 break;
             }
             //if r is pressed, the creates all the bricks again (instatiate new objects)
@@ -152,7 +156,7 @@ void Controller::keyboardHandler(Platform *platform, int socket_fd, int connecti
             case 'r': {
                 for (int i=-7; i<=7; i++) {
                     for (int j=0; j<5; j++) {
-                        Brick *brick = new Brick(i * .6f, 2.5f - j*.5f);
+                        Controller::createBrick(i * .6f, 2.5f - j*.5f);
                     }
                 }
                 break;
@@ -169,6 +173,50 @@ void Controller::keyboardHandler(Platform *platform, int socket_fd, int connecti
         std::this_thread::sleep_for (std::chrono::milliseconds(1));
     }
     close(socket_fd);
+}
+
+int Controller::createBall(float radius, float x, float y) {
+    Ball obj(radius, x, y);
+    int id = obj.setId();
+    Controller::gameObjects[id] = obj;
+    return id;
+}
+
+int Controller::createBox(float x, float y, float z, float width, float height) {
+    Box obj(x, y, z, width, height);
+    int id = obj.setId();
+    Controller::gameObjects[id] = obj;
+    return id;
+}
+
+int Controller::createBrick(float x, float y) {
+    Brick obj(x, y);
+    int id = obj.setId();
+    Controller::gameObjects[id] = obj;
+    return id;
+}
+
+int Controller::createPlatform() {
+    Platform obj = Platform();
+    int id = obj.setId();
+    Controller::gameObjects[id] = obj;
+    return id;
+}
+
+void Controller::markForDeletion(int id) {
+    gameObjects[id].deleted = true;
+    Controller::toBeDeleted.push_back(id);
+}
+
+void Controller::applyDeletions() {
+    list<int>::iterator it1;
+    for (it1 = Controller::toBeDeleted.begin(); it1 != Controller::toBeDeleted.end(); ++it1) {
+        int index = *it1;
+        map<int, GameObject>::iterator it2;
+        it2 = Controller::gameObjects.find(index);
+        Controller::gameObjects.erase(it2);
+    }
+    Controller::toBeDeleted.clear();
 }
 
 void Controller::messageSender(int socket_fd) {

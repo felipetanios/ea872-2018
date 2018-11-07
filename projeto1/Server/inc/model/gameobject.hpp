@@ -12,11 +12,10 @@ using namespace std;
 class GameObject {
 public:
     static int getTotalObjects();
-    static map<int, shared_ptr<GameObject>> gameObjects;
-    static void applyDeletions();
 
     bool deleted = false;
     int getId();
+    int setId();
 
     float x, y, z; // position
     float r, g, b; // color
@@ -35,11 +34,8 @@ public:
     ~GameObject();
 
 protected:
-    static list<int> toBeDeleted;
-    void markForDeletion();
     int id;
     static int totalObjects;
-    int setId();
 };
 
 #endif
