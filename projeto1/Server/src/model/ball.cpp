@@ -22,6 +22,7 @@ Ball::Ball(float radius, float x, float y) {
 	xSpeed = 0.05f;
 	ySpeed = 0.05f;
 	collided = false;
+    rendererType = RendererType_Sphere;
 }
 
 void Ball::update() {
@@ -75,5 +76,6 @@ void Ball::update() {
 	
 	//and finally we render the ball again
 	this->updateCollisionLogic();
-
+    Controller::sendNewPosition(*this);
+    if (collided) Controller::sendSound();
 }

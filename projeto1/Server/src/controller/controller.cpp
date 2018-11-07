@@ -27,13 +27,15 @@ uint64_t get_now_ms() {
 }
 
 Ball *Controller::ball;
-Platform *Controller::platform = new Platform();
+Platform *Controller::platform;
 
-thread Controller::keyboardThread;
+thread Controller::keyboardHandlerThread;
 thread Controller::messageSenderThread;
 
 queue<NetworkMessage> Controller::pendingMessages;
 mutex Controller::msgQueueMtx;
+
+int Controller::sequence;
 
 map<int, thread> Controller::connection;
 
@@ -81,9 +83,9 @@ void Controller::init() {
     /*
     *Initiating keyboard server thread
     */
-    std::thread newKeyboardThread(Controller::keyboardHandler, Controller::platform);
-    std::thread newSenderThread(Controller::messageSender);
-    (Controller::keyboardThread).swap(newKeyboardThread);
+    std::thread newKeyboardThread(Controller::keyboardHandler, Controller::platform, socket_fd, connection_fd, client);
+    std::thread newSenderThread(Controller::messageSender, socket_fd);
+    (Controller::keyboardHandlerThread).swap(newKeyboardThread);
     (Controller::messageSenderThread).swap(newSenderThread);
 
     for(ever) Controller::update();
@@ -107,19 +109,17 @@ void Controller::update() {
     std::this_thread::sleep_for (std::chrono::milliseconds(1));
 }
 
-
-
 void Controller::sendMessage(NetworkMessage msg) {
     Controller::msgQueueMtx.lock();
+    msg.sequence = ++Controller::sequence;
     Controller::pendingMessages.push(msg);
     Controller::msgQueueMtx.unlock();
 }
 
-
-
-void Controller::keyboardHandler(Platform *platform){
+void Controller::keyboardHandler(Platform *platform, int socket_fd, int connection_fd, struct sockaddr_in client){
     for(ever){
         printf("Vou travar ate receber alguma coisa\n");
+        char input_buffer[sizeof(NetworkMessage)];
         recv(connection_fd, input_buffer, 1, 0);
         printf("Recebi uma mensagem: %s\n", input_buffer);
 
@@ -159,7 +159,7 @@ void Controller::keyboardHandler(Platform *platform){
             }
             case 'Q':
             case 'q': {
-                GLManager::exitGlut();
+                //GLManager::exitGlut();
                 break;
             }
     
@@ -180,32 +180,54 @@ void Controller::messageSender(int socket_fd) {
         if (!Controller::pendingMessages.empty()) {
             hasMsg = true;
             msg = Controller::pendingMessages.front();
-            Controller.pendingMessages.pop();
+            Controller::pendingMessages.pop();
         }
         Controller::msgQueueMtx.unlock();
         
         if (hasMsg) {
-            auto retVal = send(socket_fd, msg, sizeof(msg), 0);
+            auto retVal = send(socket_fd, (const void*)&msg, sizeof(msg), 0);
             cout<<retVal<<endl;   
         }
     }
 }
 
 void Controller::sendNewObject(GameObject newGameObject) {
-    NetworkMessage msg = {
-        .messageType = (char)MessageType_NewObject,
-        .objectId = newGameObject.getId(),
-        .rendererType  = newGameObject.rendererType,
-        .x = newGameObject.x,
-        .y = newGameObject.y,
-        .z = newGameObject.z,
-        .r = newGameObject.r,
-        .g = newGameObject.g,
-        .b = newGameObject.b,
-        .width = newGameObject.width,
-        .height = newGameObject.height,
-        .depth = newGameObject.depth,
-    };
+    NetworkMessage msg;
+    msg.messageType = (char)MessageType_NewObject;
+    msg.objectId = newGameObject.getId();
+    msg.rendererType  = (char)newGameObject.rendererType;
+    msg.x = newGameObject.x;
+    msg.y = newGameObject.y;
+    msg.z = newGameObject.z;
+    msg.r = newGameObject.r;
+    msg.g = newGameObject.g;
+    msg.b = newGameObject.b;
+    msg.width = newGameObject.width;
+    msg.height = newGameObject.height;
+    msg.depth = newGameObject.depth;
+    Controller::sendMessage(msg);
+}
+
+void Controller::sendNewPosition(GameObject gameObject) {
+    NetworkMessage msg;
+    msg.messageType = (char)MessageType_NewPosition;
+    msg.objectId = gameObject.getId();
+    msg.x = gameObject.x;
+    msg.y = gameObject.y;
+    msg.z = gameObject.z;
+    Controller::sendMessage(msg);
+}
+
+void Controller::sendDestroy(GameObject GameObject) {
+    NetworkMessage msg;
+    msg.messageType = (char)MessageType_Destroy;
+    msg.objectId = GameObject.getId();
+    Controller::sendMessage(msg);
+}
+
+void Controller::sendSound() {
+    NetworkMessage msg;
+    msg.messageType = (char)MessageType_PlaySound;
     Controller::sendMessage(msg);
 }
 

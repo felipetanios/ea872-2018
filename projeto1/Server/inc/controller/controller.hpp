@@ -4,6 +4,8 @@
 #include <iostream>
 #include <chrono>
 #include <thread>
+#include <queue>
+#include <mutex>
 #include "../../../inc/datatypes.hpp"
 
 using namespace std;
@@ -14,9 +16,16 @@ public:
 	static Platform *platform;
 	static Ball *ball;
 	static map<int, thread> connection;
+
+	static void sendNewObject(GameObject newGameObject);
+	static void sendNewPosition(GameObject gameObject);
+	static void sendDestroy(GameObject GameObject);
+	static void sendSound();
+
+	static int sequence;
 	
 	static thread keyboardHandlerThread;
-	static void keyboardHandler(Platform *platform, int socket_fd);
+	static void keyboardHandler(Platform *platform, int socket_fd, int connection_fd, struct sockaddr_in client);
 
 	static thread messageSenderThread;
 	static void messageSender(int socket_fd);

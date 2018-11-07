@@ -1,3 +1,6 @@
+#ifndef EA872_DATATYPES
+#define EA872_DATATYPES
+
 struct NetworkMessage {
 	char messageType;
 	int objectId;
@@ -19,3 +22,5 @@ enum RendererType {
 	RendererType_Cube = 0,
 	RendererType_Sphere = 1,
 };
+
+#endif

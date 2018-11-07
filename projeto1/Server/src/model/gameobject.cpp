@@ -1,5 +1,7 @@
 #include <model/gameobject.hpp>
 #include <iostream>
+#include <controller/controller.hpp>
+
 using namespace std;
 
 //this is the game object class
@@ -18,6 +20,7 @@ GameObject::GameObject() {
 
 GameObject::~GameObject() {
     cout << "destroying game object " << (int)this->id << endl;
+    Controller::sendDestroy(*this);
 }
 
 int GameObject::getTotalObjects() {
@@ -68,4 +71,5 @@ void GameObject::applyDeletions() {
 int GameObject::setId() {
     this->id = GameObject::totalObjects++;
     GameObject::gameObjects[this->id] = shared_ptr<GameObject>(this);
+    Controller::sendNewObject(*this);
 }

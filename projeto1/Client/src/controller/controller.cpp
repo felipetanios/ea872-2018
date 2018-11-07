@@ -69,10 +69,9 @@ void Controller::init() {
     target.sin_family = AF_INET;
     target.sin_port = htons(3001);
     inet_aton("127.0.0.1", & (target.sin_addr));
-    printf("Tentando conectar\n");
-    if (connect(Controller::socketId, (struct sockaddr * ) & target, sizeof(target)) != 0) {
-        printf("Problemas na conexao\n");
-        return;
+    while (connect(Controller::socketId, (struct sockaddr * ) & target, sizeof(target)) != 0) {
+        printf("Tentando conectar\n");
+        std::this_thread::sleep_for (std::chrono::milliseconds(500));
     }
 
     printf("Conectei ao servidor\n");
