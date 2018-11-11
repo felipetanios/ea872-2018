@@ -223,8 +223,8 @@ void Controller::messageSender(int socket_fd) {
     for(ever) {
         NetworkMessage msg;
 
-        Controller::msgQueueMtx.lock();
         bool hasMsg = false;
+        Controller::msgQueueMtx.lock();
         if (!Controller::pendingMessages.empty()) {
             hasMsg = true;
             msg = Controller::pendingMessages.front();
