@@ -1,4 +1,5 @@
 #include <model/platform.hpp>
+#include <controller/controller.hpp>
 
 #define MOVE_INCREMENT 0.3f
 
@@ -20,10 +21,14 @@ Platform::Platform() {
 
 void Platform::moveRight() {
 	x += MOVE_INCREMENT;
+	cout << "new platform position " << x << endl;
 	this->updateCollisionLogic();
+	Controller::sendNewPosition(*this);
 }
 
 void Platform::moveLeft() {
 	x -= MOVE_INCREMENT;
+	cout << "new platform position " << x << endl;
 	this->updateCollisionLogic();
+	Controller::sendNewPosition(*this);
 }

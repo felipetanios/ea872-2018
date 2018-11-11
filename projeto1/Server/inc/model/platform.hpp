@@ -1,3 +1,6 @@
+#ifndef PLATFORM
+#define PLATFORM
+
 #include <model/gameobject.hpp>
 
 class Platform : public GameObject {
@@ -6,3 +9,5 @@ public:
     void moveRight();
     void moveLeft();
 };
+
+#endif

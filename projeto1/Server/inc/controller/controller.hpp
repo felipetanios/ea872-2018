@@ -22,9 +22,9 @@ public:
 	static int createBrick(float x, float y);
 	static int createPlatform();
 
-
 	static void sendNewObject(GameObject newGameObject);
 	static void sendNewPosition(GameObject gameObject);
+	static void sendNewPosition(int gameObjectId, float x, float y, float z);
 	static void sendDestroy(int id);
 	static void sendSound();
 

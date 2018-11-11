@@ -3,7 +3,7 @@
 #include <cstdlib>
 #include <ctime>
 #include <iostream>
-#include <stdio.h>
+#include <cstdio>
 
 #include <chrono>
 #include <iostream>
@@ -11,13 +11,14 @@
 #include <queue>
 #include <mutex>
 
-#include <stdio.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include <signal.h>
+#include <csignal>
+#include <cerrno>
+#include <cstring>
 
 #define ever ;; 
 
@@ -98,7 +99,10 @@ void Controller::update() {
     //update objects positions
     map<int, GameObject>::iterator it1;
     for (it1 = Controller::gameObjects.begin(); it1 != Controller::gameObjects.end(); ++it1) {
-        it1->second.update();
+        int index = it1->first;
+
+        GameObject *obj = /*(GameObject*)*/&(Controller::gameObjects[index]);
+        obj->update();
     }
 
     Controller::applyDeletions();
@@ -123,56 +127,67 @@ void Controller::keyboardHandler(int platformId, int socket_fd, int connection_f
     for(ever){
         printf("Vou travar ate receber alguma coisa\n");
         char input_buffer[sizeof(NetworkMessage)];
-        recv(connection_fd, input_buffer, 1, 0);
-        printf("Recebi uma mensagem: %s\n", input_buffer);
+        bool stop = false;
+        int retVal = recv(connection_fd, input_buffer, 1, 0);
+        if (retVal == 0) {
+            cerr << "Warning: Received 0 byte" << endl;
+        } else if (retVal < -1) {
+            cerr << "ERROR: " << strerror(errno) << endl;
+        } else {
+            printf("Recebi uma mensagem: %s\n", input_buffer);
 
-        GameObject platformGameObject = Controller::gameObjects[platformId];
-        Platform *platform = (Platform*)&platformGameObject;
+            Platform *platform = (Platform*)&(Controller::gameObjects[platformId]);
 
-        /* Identificando cliente */
-        char ip_client[INET_ADDRSTRLEN];
-        inet_ntop( AF_INET, &(client.sin_addr), ip_client, INET_ADDRSTRLEN );
-        printf("IP que enviou: %s\n", ip_client);
+            /* Identificando cliente */
+            char ip_client[INET_ADDRSTRLEN];
+            inet_ntop( AF_INET, &(client.sin_addr), ip_client, INET_ADDRSTRLEN );
+            printf("IP que enviou: %s\n", ip_client);
 
-        switch(input_buffer[0]) {
-            //if a is pressed, the platform moves to the left
-            case 'A':
-            case 'a': {
-                platform->moveLeft();
-                break;
-            }
-            //if d is pressed, the platform moves to the right
-            case 'D':
-            case 'd': {
-                platform->moveRight();
-                break;
-            }
-            //if b is pressed, another ball appears in a random place (within a limiter of positions)
-            case 'B':
-            case 'b': {
-                Controller::createBall(0.1f, 2.5f - rand () % 5, -1.f);
-                break;
-            }
-            //if r is pressed, the creates all the bricks again (instatiate new objects)
-            case 'R':
-            case 'r': {
-                for (int i=-7; i<=7; i++) {
-                    for (int j=0; j<5; j++) {
-                        Controller::createBrick(i * .6f, 2.5f - j*.5f);
-                    }
+            switch(input_buffer[0]) {
+                //if a is pressed, the platform moves to the left
+                case 'A':
+                case 'a': {
+                    platform->moveLeft();
+                    break;
                 }
-                break;
+                //if d is pressed, the platform moves to the right
+                case 'D':
+                case 'd': {
+                    platform->moveRight();
+                    break;
+                }
+                //if b is pressed, another ball appears in a random place (within a limiter of positions)
+                case 'B':
+                case 'b': {
+                    Controller::createBall(0.1f, 2.5f - rand () % 5, -1.f);
+                    break;
+                }
+                //if r is pressed, the creates all the bricks again (instatiate new objects)
+                case 'R':
+                case 'r': {
+                    for (int i=-7; i<=7; i++) {
+                        for (int j=0; j<5; j++) {
+                            Controller::createBrick(i * .6f, 2.5f - j*.5f);
+                        }
+                    }
+                    break;
+                }
+                case 'Q':
+                case 'q': {
+                    stop = true;
+                    break;
+                }
+        
+                default:
+                    break;
             }
-            case 'Q':
-            case 'q': {
-                //GLManager::exitGlut();
+            if (stop)
                 break;
-            }
-    
-            default:
-                break;
+
+            std::this_thread::sleep_for (std::chrono::milliseconds(1));
         }
-        std::this_thread::sleep_for (std::chrono::milliseconds(1));
+
+        
     }
     close(socket_fd);
 }
@@ -238,9 +253,11 @@ void Controller::messageSender(int socket_fd) {
         
         if (hasMsg) {
             auto retVal = send(socket_fd, (const void*)&msg, sizeof(msg), 0);
-            if (retVal < 1) {
-                cerr << "ERROR: Send returned " << retVal << endl;    
-            }  else {
+            if (retVal == 0) {
+                cerr << "Warning: Send returned 0" << endl;   
+            } else if (retVal == -1) {
+                cerr << "ERROR: " << strerror(errno) << endl;
+            } else {
                 cout << "Sent " << retVal << " bytes" << endl; 
             }
         }
@@ -266,12 +283,17 @@ void Controller::sendNewObject(GameObject newGameObject) {
 }
 
 void Controller::sendNewPosition(GameObject gameObject) {
+    Controller::sendNewPosition(gameObject.getId(), gameObject.x, gameObject.y, gameObject.z);
+}
+
+void Controller::sendNewPosition(int gameObjectId, float x, float y, float z) {
     NetworkMessage msg;
     msg.messageType = (char)MessageType_NewPosition;
-    msg.objectId = gameObject.getId();
-    msg.x = gameObject.x;
-    msg.y = gameObject.y;
-    msg.z = gameObject.z;
+    msg.objectId = gameObjectId;
+    msg.x = x;
+    msg.y = y;
+    msg.z = z;
+    cout << "Sending object " << msg.objectId << " position " << msg.x << " " << msg.y << " " << msg.z << endl;
     Controller::sendMessage(msg);
 }
 
