@@ -25,7 +25,7 @@ public:
 
 	static void sendNewObject(GameObject newGameObject);
 	static void sendNewPosition(GameObject gameObject);
-	static void sendDestroy(GameObject GameObject);
+	static void sendDestroy(int id);
 	static void sendSound();
 
 	static int sequence;

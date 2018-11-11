@@ -17,6 +17,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <signal.h>
 
 #define ever ;; 
 
@@ -40,6 +41,7 @@ int Controller::sequence;
 map<int, thread> Controller::connection;
 
 void Controller::init() {
+    signal(SIGPIPE, SIG_IGN); 
     int socket_fd, connection_fd;
     struct sockaddr_in myself, client;
     socklen_t client_size = (socklen_t)sizeof(client);
@@ -84,7 +86,7 @@ void Controller::init() {
     *Initiating keyboard server thread
     */
     std::thread newKeyboardThread(Controller::keyboardHandler, Controller::createPlatform(), socket_fd, connection_fd, client);
-    std::thread newSenderThread(Controller::messageSender, socket_fd);
+    std::thread newSenderThread(Controller::messageSender, connection_fd);
     (Controller::keyboardHandlerThread).swap(newKeyboardThread);
     (Controller::messageSenderThread).swap(newSenderThread);
 
@@ -214,6 +216,8 @@ void Controller::applyDeletions() {
         int index = *it1;
         map<int, GameObject>::iterator it2;
         it2 = Controller::gameObjects.find(index);
+        cout << "Deleting game object " << index << endl;
+        Controller::sendDestroy(index);
         Controller::gameObjects.erase(it2);
     }
     Controller::toBeDeleted.clear();
@@ -234,8 +238,13 @@ void Controller::messageSender(int socket_fd) {
         
         if (hasMsg) {
             auto retVal = send(socket_fd, (const void*)&msg, sizeof(msg), 0);
-            cout<<retVal<<endl;   
+            if (retVal < 1) {
+                cerr << "ERROR: Send returned " << retVal << endl;    
+            }  else {
+                cout << "Sent " << retVal << " bytes" << endl; 
+            }
         }
+        std::this_thread::sleep_for (std::chrono::milliseconds(1));
     }
 }
 
@@ -266,10 +275,10 @@ void Controller::sendNewPosition(GameObject gameObject) {
     Controller::sendMessage(msg);
 }
 
-void Controller::sendDestroy(GameObject GameObject) {
+void Controller::sendDestroy(int id) {
     NetworkMessage msg;
     msg.messageType = (char)MessageType_Destroy;
-    msg.objectId = GameObject.getId();
+    msg.objectId = id;
     Controller::sendMessage(msg);
 }
 

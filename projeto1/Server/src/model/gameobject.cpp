@@ -13,10 +13,7 @@ int GameObject::totalObjects = 0;
 
 GameObject::GameObject() {}
 
-GameObject::~GameObject() {
-    cout << "destroying game object " << (int)this->id << endl;
-    Controller::sendDestroy(*this);
-}
+GameObject::~GameObject() {}
 
 int GameObject::getTotalObjects() {
     return GameObject::totalObjects;
