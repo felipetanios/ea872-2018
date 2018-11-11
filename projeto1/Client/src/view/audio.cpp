@@ -105,8 +105,7 @@ int mix_and_play (const void *inputBuffer, void *outputBuffer,
         buffer[i] = data[pos];
       else
         buffer[i] = 0;
-      i++;
-      pos+=2;
+      pos++;
     }
     s->set_position(pos);
   }

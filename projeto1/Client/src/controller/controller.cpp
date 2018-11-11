@@ -46,9 +46,12 @@ void Controller::init() {
     // init sound 
     Controller::asample = new Sample();
     Controller::player = new Player();
-    Controller::asample->load("assets/blip.dat");
-    Controller::player->init();
 
+    /*Playing silence so there's no wierd noise*/
+    Controller::asample->load("assets/silence.dat");
+    Controller::player->init();
+    asample->set_position(0);
+    player->play(asample);
     uint64_t t0, t1;
     for(ever) {
         std::this_thread::sleep_for (std::chrono::milliseconds(1));
@@ -56,7 +59,19 @@ void Controller::init() {
 
         if (t1-t0 > 5000) break;
     }
-    player->play(asample);
+
+
+    // Controller::asample->load("assets/blip.dat");
+    // Controller::player->init();
+
+    // uint64_t t0, t1;
+    // for(ever) {
+    //     std::this_thread::sleep_for (std::chrono::milliseconds(1));
+    //     t1 = get_now_ms();
+
+    //     if (t1-t0 > 5000) break;
+    // }
+    // player->play(asample);
     player->pause();    
 
     // init connection
