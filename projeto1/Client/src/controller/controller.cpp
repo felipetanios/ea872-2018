@@ -5,7 +5,8 @@
 #include <cstdlib>
 #include <ctime>
 #include <iostream>
-#include <stdio.h>
+#include <cstring>
+#include <cerrno>
 
 #include <chrono>
 #include <iostream>
@@ -84,9 +85,9 @@ void Controller::receiverLoop() {
     cout << "Iniciando thread de recepção" << endl;
     for(ever) {
         NetworkMessage msg;
-        int status = recv(Controller::connectionId, &msg, sizeof(msg), 0);
+        int status = recv(Controller::socketId, &msg, sizeof(msg), 0);
         if (status < 0) {
-            cout << "'recv' error " << status << endl;
+            cerr << "ERROR: " << strerror(errno) << endl;
             return;
         }
         int msgType = (int)msg.messageType;
@@ -94,6 +95,7 @@ void Controller::receiverLoop() {
             
             case MessageType_NewObject: 
                 {
+                    cout << "New object " << msg.objectId << endl;
                     int rendType = (int)msg.rendererType;
                     Renderer newRenderer;
                     switch (rendType) {
@@ -108,18 +110,24 @@ void Controller::receiverLoop() {
                     newRenderer.setColor(msg.r, msg.g, msg.b);
                     newRenderer.setPosition(msg.x, msg.y, msg.z);
                     Controller::renderers[msg.objectId] = newRenderer;
+                    GLManager::redisplay();
                 }
                 break;
             
             case MessageType_NewPosition:
+                cout << "New object " << msg.objectId << " position " << msg.x << " " << msg.y << " " << msg.z << endl;
                 Controller::renderers[msg.objectId].setPosition(msg.x, msg.y, msg.z);
+                GLManager::redisplay();
                 break;
 
             case MessageType_Destroy:
+                cout << "Destroy object " << msg.objectId << endl;
                 Controller::renderers.erase(msg.objectId);
+                GLManager::redisplay();
                 break;
 
             case MessageType_PlaySound:
+                cout << "Play sound" << endl;
                 Controller::soundThreads.push_back(std::thread(threadSound, Controller::player, Controller::asample));
                 break;
         }

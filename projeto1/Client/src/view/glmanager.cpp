@@ -4,6 +4,7 @@
 
 using namespace std;
 
+bool GLManager::ready = false;
 
 //this is the GLUT and OpenGL manager, it defines the position of lights, window,
 //defines our mainloop, reshape function and most importantly
@@ -30,6 +31,7 @@ void GLManager::init(int argc, char** argv, char name[]) {
     glutIdleFunc(GLManager::glIdle);
     glutReshapeFunc(GLManager::glReshape);       // Register callback handler for window re-size event
     glutKeyboardFunc(Controller::readKeyboardInput);
+    GLManager::ready = true;
 }
 
 void GLManager::glDisplay() {
@@ -45,12 +47,10 @@ void GLManager::glDisplay() {
     glLightfv(GL_LIGHT0, GL_SPECULAR, light3pos);
     glLightModelfv(GL_LIGHT_MODEL_AMBIENT, lightmodel);
 
-    // map<int, shared_ptr<GameObject>>::iterator it;
-    // for (it = GameObject::gameObjects.begin(); it != GameObject::gameObjects.end(); ++it) {
-    //     if (!it->second->deleted)
-    //         it->second->renderer.render();
-    // }
-
+    map<int, Renderer>::iterator it;
+    for (it = Controller::renderers.begin(); it != Controller::renderers.end(); ++it) {
+        it->second.render();
+    }
     
     glutSwapBuffers();  // Swap the front and back frame buffers (double buffering)
 }
@@ -75,7 +75,6 @@ void GLManager::glReshape(GLsizei width, GLsizei height) {
 }
 
 void GLManager::glIdle() {
-    //Controller::update();
     glutPostRedisplay();
 }
 
@@ -88,7 +87,8 @@ void GLManager::renderSphere() {
 }
 
 void GLManager::redisplay() {
-    glutPostRedisplay();
+    if (GLManager::ready)
+        glutPostRedisplay();
 }
 
 void GLManager::mainLoop() {

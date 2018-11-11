@@ -19,5 +19,6 @@ public:
 	static void redisplay();
 	static void mainLoop();
 	static void exitGlut();
+	static bool ready;
 };
 #endif
