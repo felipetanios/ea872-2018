@@ -35,11 +35,14 @@ mutex Controller::msgQueueMtx;
 
 list<NetworkMessage> Controller::permanentMessages;
 mutex Controller::permanentMsgQueueMtx;
+mutex Controller::receiverThreadsMtx;
 
-map<int, thread> Controller::senderThreads;
+//map<int, thread> Controller::senderThreads;
 map<int, thread> Controller::receiverThreads;
 map<int, GameObject> Controller::gameObjects;
 list<int> Controller::toBeDeleted;
+
+thread Controller::messageSenderThread;
 
 int Controller::sequence;
 
@@ -67,7 +70,8 @@ void Controller::init() {
     listen(socket_fd, 2);
     printf("Estou ouvindo na porta 3001!\n");
 
-    connectionHandlerThread = thread(Controller::connectionHandler, socket_fd, client);
+    Controller::connectionHandlerThread = thread(Controller::connectionHandler, socket_fd, client);
+    Controller::messageSenderThread = thread(Controller::messageSender);
 
     printf("Conectado");
     
@@ -84,8 +88,6 @@ void Controller::init() {
             Controller::createBrick(i * .6f, 2.5f - j*.5f);
         }
     }
-
-
 
     for(ever) Controller::update();
 }
@@ -112,7 +114,7 @@ void Controller::update() {
     std::this_thread::sleep_for (std::chrono::milliseconds(1));
 }
 
-void Controller::sendMessage(NetworkMessage msg) {
+void Controller::enqueueMessage(NetworkMessage msg) {
     Controller::msgQueueMtx.lock();
     msg.sequence = ++Controller::sequence;
     Controller::pendingMessages.push(msg);
@@ -127,8 +129,18 @@ void Controller::connectionHandler(int socket_fd, struct sockaddr_in client){
             cerr << "ERROR: " << strerror(errno) << endl;
         } else {
             cout << "Starting new thread for new connection handling" << endl;
-            Controller::senderThreads[connection_fd] = thread(Controller::messageSender, connection_fd);
+
+            Controller::permanentMsgQueueMtx.lock();
+            list<NetworkMessage>::iterator it1;
+            for (it1 = Controller::permanentMessages.begin(); it1 != Controller::permanentMessages.end(); ++it1) {
+                NetworkMessage msg = *it1;
+                Controller::sendMessage(msg, connection_fd);
+            }
+            Controller::permanentMsgQueueMtx.unlock();
+
+            Controller::receiverThreadsMtx.lock();
             Controller::receiverThreads[connection_fd] = thread(Controller::keyboardHandler, Controller::createPlatform(), socket_fd, connection_fd, client);
+            Controller::receiverThreadsMtx.unlock();
         }
     }
 }
@@ -248,25 +260,7 @@ void Controller::applyDeletions() {
     Controller::toBeDeleted.clear();
 }
 
-void Controller::messageSender(int socket_fd) {
-
-
-    Controller::permanentMsgQueueMtx.lock();
-
-    list<NetworkMessage>::iterator it1;
-    for (it1 = Controller::permanentMessages.begin(); it1 != Controller::permanentMessages.end(); ++it1) {
-        NetworkMessage msg = *it1;
-        auto retVal = send(socket_fd, (const void*)&msg, sizeof(msg), 0);
-        if (retVal == 0) {
-            cerr << "Warning: Send returned 0" << endl;   
-        } else if (retVal == -1) {
-            cerr << "ERROR: " << strerror(errno) << endl;
-        } else {
-            cout << "Sent " << retVal << " bytes" << endl; 
-        }
-    }
-    Controller::permanentMsgQueueMtx.unlock();
-
+void Controller::messageSender() {
     for(ever) {
         NetworkMessage msg;
 
@@ -280,16 +274,26 @@ void Controller::messageSender(int socket_fd) {
         Controller::msgQueueMtx.unlock();
         
         if (hasMsg) {
-            auto retVal = send(socket_fd, (const void*)&msg, sizeof(msg), 0);
-            if (retVal == 0) {
-                cerr << "Warning: Send returned 0" << endl;   
-            } else if (retVal == -1) {
-                cerr << "ERROR: " << strerror(errno) << endl;
-            } else {
-                cout << "Sent " << retVal << " bytes" << endl; 
+            Controller::receiverThreadsMtx.lock();
+            map<int, thread>::iterator it;
+            for(it = Controller::receiverThreads.begin(); it != Controller::receiverThreads.end(); ++it) {
+                int socket_fd = it->first;
+                Controller::sendMessage(msg, socket_fd);
             }
+            Controller::receiverThreadsMtx.unlock();
         }
         std::this_thread::sleep_for (std::chrono::milliseconds(1));
+    }
+}
+
+void Controller::sendMessage(NetworkMessage msg, int socket_fd) {
+    auto retVal = send(socket_fd, (const void*)&msg, sizeof(msg), 0);
+    if (retVal == 0) {
+        cerr << "Warning: Send returned 0" << endl;   
+    } else if (retVal == -1) {
+        cerr << "ERROR: " << strerror(errno) << endl;
+    } else {
+        cout << "Sent " << retVal << " bytes" << endl; 
     }
 }
 
@@ -307,7 +311,7 @@ void Controller::sendNewObject(GameObject newGameObject) {
     msg.width = newGameObject.width;
     msg.height = newGameObject.height;
     msg.depth = newGameObject.depth;
-    Controller::sendMessage(msg);
+    Controller::enqueueMessage(msg);
 
     Controller::permanentMsgQueueMtx.lock();
     msg.sequence = Controller::sequence;
@@ -327,14 +331,14 @@ void Controller::sendNewPosition(int gameObjectId, float x, float y, float z) {
     msg.y = y;
     msg.z = z;
     cout << "Sending object " << msg.objectId << " position " << msg.x << " " << msg.y << " " << msg.z << endl;
-    Controller::sendMessage(msg);
+    Controller::enqueueMessage(msg);
 }
 
 void Controller::sendDestroy(int id) {
     NetworkMessage msg;
     msg.messageType = (char)MessageType_Destroy;
     msg.objectId = id;
-    Controller::sendMessage(msg);
+    Controller::enqueueMessage(msg);
 
     Controller::permanentMsgQueueMtx.lock();
     msg.sequence = Controller::sequence;
@@ -345,7 +349,7 @@ void Controller::sendDestroy(int id) {
 void Controller::sendSound() {
     NetworkMessage msg;
     msg.messageType = (char)MessageType_PlaySound;
-    Controller::sendMessage(msg);
+    Controller::enqueueMessage(msg);
 }
 
 #undef ever

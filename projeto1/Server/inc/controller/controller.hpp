@@ -13,7 +13,8 @@ using namespace std;
 class Controller {
 public:
 	static list<thread> soundThreads;
-	static map<int, thread> senderThreads;
+
+	static mutex receiverThreadsMtx;
 	static map<int, thread> receiverThreads;
 	static map<int, GameObject> gameObjects;
 
@@ -33,7 +34,8 @@ public:
 	
 	static void keyboardHandler(int platformId, int socket_fd, int connection_fd, struct sockaddr_in client);
 
-	static void messageSender(int socket_fd);
+	static thread messageSenderThread;
+	static void messageSender();
 
 	static thread connectionHandlerThread;
 	static void connectionHandler(int socket_fd, struct sockaddr_in client);
@@ -46,7 +48,8 @@ public:
 
 	static void init();
 	static void update();
-	static void sendMessage(NetworkMessage msg);
+	static void enqueueMessage(NetworkMessage msg);
+	static void sendMessage(NetworkMessage msg, int socket_fd);
 
     static void applyDeletions();
     static void markForDeletion(int id);
