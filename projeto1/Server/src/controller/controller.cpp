@@ -28,24 +28,26 @@ uint64_t get_now_ms() {
   return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
 }
 
-thread Controller::keyboardHandlerThread;
-thread Controller::messageSenderThread;
+thread Controller::connectionHandlerThread;
 
 queue<NetworkMessage> Controller::pendingMessages;
 mutex Controller::msgQueueMtx;
 
+list<NetworkMessage> Controller::permanentMessages;
+mutex Controller::permanentMsgQueueMtx;
+
+map<int, thread> Controller::senderThreads;
+map<int, thread> Controller::receiverThreads;
 map<int, GameObject> Controller::gameObjects;
 list<int> Controller::toBeDeleted;
 
 int Controller::sequence;
 
-map<int, thread> Controller::connection;
-
 void Controller::init() {
     signal(SIGPIPE, SIG_IGN); 
     int socket_fd, connection_fd;
     struct sockaddr_in myself, client;
-    socklen_t client_size = (socklen_t)sizeof(client);
+    
     char input_buffer[50];
 
     socket_fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -64,12 +66,12 @@ void Controller::init() {
 
     listen(socket_fd, 2);
     printf("Estou ouvindo na porta 3001!\n");
-    connection_fd = accept(socket_fd, (struct sockaddr*)&client, &client_size);
+
+    connectionHandlerThread = thread(Controller::connectionHandler, socket_fd, client);
 
     printf("Conectado");
     
-    //instantiating ball, platform, bounderies of play enviroment, bricks to destroy, sound player, 
-    //sound sample and the pointer to sound threads list
+
     srand(time(NULL));
     Controller::createBall(0.1f, 2.5f - rand () % 5, -1.f);
 
@@ -83,13 +85,7 @@ void Controller::init() {
         }
     }
 
-    /*
-    *Initiating keyboard server thread
-    */
-    std::thread newKeyboardThread(Controller::keyboardHandler, Controller::createPlatform(), socket_fd, connection_fd, client);
-    std::thread newSenderThread(Controller::messageSender, connection_fd);
-    (Controller::keyboardHandlerThread).swap(newKeyboardThread);
-    (Controller::messageSenderThread).swap(newSenderThread);
+
 
     for(ever) Controller::update();
 }
@@ -123,6 +119,20 @@ void Controller::sendMessage(NetworkMessage msg) {
     Controller::msgQueueMtx.unlock();
 }
 
+void Controller::connectionHandler(int socket_fd, struct sockaddr_in client){
+    socklen_t client_size = (socklen_t)sizeof(client);
+    for(ever){
+        int connection_fd = accept(socket_fd, (struct sockaddr*)&client, &client_size);
+        if (connection_fd < 0) {
+            cerr << "ERROR: " << strerror(errno) << endl;
+        } else {
+            cout << "Starting new thread for new connection handling" << endl;
+            Controller::senderThreads[connection_fd] = thread(Controller::messageSender, connection_fd);
+            Controller::receiverThreads[connection_fd] = thread(Controller::keyboardHandler, Controller::createPlatform(), socket_fd, connection_fd, client);
+        }
+    }
+}
+
 void Controller::keyboardHandler(int platformId, int socket_fd, int connection_fd, struct sockaddr_in client){
     for(ever){
         printf("Vou travar ate receber alguma coisa\n");
@@ -131,7 +141,7 @@ void Controller::keyboardHandler(int platformId, int socket_fd, int connection_f
         int retVal = recv(connection_fd, input_buffer, 1, 0);
         if (retVal == 0) {
             cerr << "Warning: Received 0 byte" << endl;
-        } else if (retVal < -1) {
+        } else if (retVal < 0) {
             cerr << "ERROR: " << strerror(errno) << endl;
         } else {
             printf("Recebi uma mensagem: %s\n", input_buffer);
@@ -239,6 +249,24 @@ void Controller::applyDeletions() {
 }
 
 void Controller::messageSender(int socket_fd) {
+
+
+    Controller::permanentMsgQueueMtx.lock();
+
+    list<NetworkMessage>::iterator it1;
+    for (it1 = Controller::permanentMessages.begin(); it1 != Controller::permanentMessages.end(); ++it1) {
+        NetworkMessage msg = *it1;
+        auto retVal = send(socket_fd, (const void*)&msg, sizeof(msg), 0);
+        if (retVal == 0) {
+            cerr << "Warning: Send returned 0" << endl;   
+        } else if (retVal == -1) {
+            cerr << "ERROR: " << strerror(errno) << endl;
+        } else {
+            cout << "Sent " << retVal << " bytes" << endl; 
+        }
+    }
+    Controller::permanentMsgQueueMtx.unlock();
+
     for(ever) {
         NetworkMessage msg;
 
@@ -280,6 +308,11 @@ void Controller::sendNewObject(GameObject newGameObject) {
     msg.height = newGameObject.height;
     msg.depth = newGameObject.depth;
     Controller::sendMessage(msg);
+
+    Controller::permanentMsgQueueMtx.lock();
+    msg.sequence = Controller::sequence;
+    Controller::permanentMessages.push_back(msg);
+    Controller::permanentMsgQueueMtx.unlock();
 }
 
 void Controller::sendNewPosition(GameObject gameObject) {
@@ -302,6 +335,11 @@ void Controller::sendDestroy(int id) {
     msg.messageType = (char)MessageType_Destroy;
     msg.objectId = id;
     Controller::sendMessage(msg);
+
+    Controller::permanentMsgQueueMtx.lock();
+    msg.sequence = Controller::sequence;
+    Controller::permanentMessages.push_back(msg);
+    Controller::permanentMsgQueueMtx.unlock();
 }
 
 void Controller::sendSound() {
