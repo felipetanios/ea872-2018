@@ -131,6 +131,11 @@ void Controller::connectionHandler(int socket_fd, struct sockaddr_in client){
             list<NetworkMessage>::iterator it1;
             for (it1 = Controller::permanentMessages.begin(); it1 != Controller::permanentMessages.end(); ++it1) {
                 NetworkMessage msg = *it1;
+                if (msg.messageType == MessageType_NewObject && Controller::gameObjects.find(msg.objectId) != Controller::gameObjects.end()) {
+                    msg.x = Controller::gameObjects[msg.objectId]->x;
+                    msg.y = Controller::gameObjects[msg.objectId]->y;
+                    msg.z = Controller::gameObjects[msg.objectId]->z;
+                }
                 Controller::sendMessage(msg, connection_fd);
             }
             Controller::permanentMsgQueueMtx.unlock();
