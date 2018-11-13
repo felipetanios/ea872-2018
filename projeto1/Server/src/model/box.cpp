@@ -9,9 +9,9 @@ Box::Box(float x, float y, float z, float width, float height) {
 	this->width = width;
 	this->height = height;
 	depth = 1.f;	
-	r = 0.f;
-	g = 0.f;
-	b = 1.f;
+	r = .0f;
+	g = 1.f;
+	b = .0f;
     rendererType = RendererType_Cube;
 
 	this->updateCollisionLogic();

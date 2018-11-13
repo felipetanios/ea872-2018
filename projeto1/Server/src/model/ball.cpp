@@ -17,8 +17,8 @@ Ball::Ball(float radius, float x, float y) {
 	width = radius;
 	height = radius;
 	depth = radius;
-	r = 0.f;
-	g = 1.f;
+	r = 1.f;
+	g = 0.f;
 	b = 0.f;
 	xSpeed = 0.05f;
 	ySpeed = 0.05f;

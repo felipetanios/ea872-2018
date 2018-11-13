@@ -19,10 +19,10 @@ public:
 	static map<int, GameObject*> gameObjects;
 	static map<int, Ball*> balls;
 
-	static int createBall(float radius, float x, float y);
+	static int createBall(float radius, float x, float y, int owner);
 	static int createBox(float x, float y, float z, float width, float height);
 	static int createBrick(float x, float y);
-	static int createPlatform();
+	static int createPlatform(int owner);
 
 	static void sendNewObject(GameObject newGameObject);
 	static void sendNewPosition(GameObject gameObject);

@@ -17,6 +17,7 @@ public:
     bool destroyable = false;
     int getId();
     int setId();
+    int owner = 0;
 
     float x, y, z; // position
     float r, g, b; // color

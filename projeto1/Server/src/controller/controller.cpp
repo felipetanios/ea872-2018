@@ -132,19 +132,19 @@ void Controller::connectionHandler(int socket_fd, struct sockaddr_in client){
             for (it1 = Controller::permanentMessages.begin(); it1 != Controller::permanentMessages.end(); ++it1) {
                 NetworkMessage msg = *it1;
                 if (msg.messageType == MessageType_NewObject && Controller::gameObjects.find(msg.objectId) != Controller::gameObjects.end()) {
-                    msg.x = Controller::gameObjects[msg.objectId]->x;
-                    msg.y = Controller::gameObjects[msg.objectId]->y;
-                    msg.z = Controller::gameObjects[msg.objectId]->z;
+                    GameObject *go = Controller::gameObjects[msg.objectId];
+                    msg.x = go->x;
+                    msg.y = go->y;
+                    msg.z = go->z;
                 }
                 Controller::sendMessage(msg, connection_fd);
             }
             Controller::permanentMsgQueueMtx.unlock();
 
             Controller::receiverThreadsMtx.lock();
-            Controller::receiverThreads[connection_fd] = thread(Controller::keyboardHandler, Controller::createPlatform(), socket_fd, connection_fd, client);
+            Controller::receiverThreads[connection_fd] = thread(Controller::keyboardHandler, Controller::createPlatform(connection_fd), socket_fd, connection_fd, client);
             Controller::receiverThreadsMtx.unlock();
-
-            Controller::createBall(0.1f, 2.5f - rand () % 5, -1.f);
+            Controller::createBall(0.1f, 2.5f - rand () % 5, -1.f, connection_fd);
         }
     }
 }
@@ -185,7 +185,7 @@ void Controller::keyboardHandler(int platformId, int socket_fd, int connection_f
                 //if b is pressed, another ball appears in a random place (within a limiter of positions)
                 case 'B':
                 case 'b': {
-                    Controller::createBall(0.1f, 2.5f - rand () % 5, -1.f);
+                    Controller::createBall(0.1f, 2.5f - rand () % 5, -1.f, connection_fd);
                     break;
                 }
                 //if r is pressed, the creates all the bricks again (instatiate new objects)
@@ -216,13 +216,15 @@ void Controller::keyboardHandler(int platformId, int socket_fd, int connection_f
     close(socket_fd);
 }
 
-int Controller::createBall(float radius, float x, float y) {
+int Controller::createBall(float radius, float x, float y, int owner) {
     Ball* obj1 = new Ball(radius, x, y);
     Ball* obj2 = new Ball(radius, x, y);
     int id = obj1->setId();
     obj2->id = id;
     Controller::gameObjects[id] = obj1;
+    Controller::gameObjects[id]->owner = owner;
     Controller::balls[id] = obj2;
+    Controller::balls[id]->owner = owner;
     return id;
 }
 
@@ -242,10 +244,11 @@ int Controller::createBrick(float x, float y) {
     return id;
 }
 
-int Controller::createPlatform() {
+int Controller::createPlatform(int owner) {
     Platform* obj = new Platform();
     int id = obj->setId();
     Controller::gameObjects[id] = obj;
+    Controller::gameObjects[id]->owner = owner;
     return id;
 }
 
@@ -285,6 +288,11 @@ void Controller::messageSender() {
             map<int, thread>::iterator it;
             for(it = Controller::receiverThreads.begin(); it != Controller::receiverThreads.end(); ++it) {
                 int socket_fd = it->first;
+                if (msg.messageType == MessageType_NewObject && Controller::gameObjects[msg.objectId]->owner == socket_fd) {
+                    msg.r = 0.f;
+                    msg.g = 0.f;
+                    msg.b = 1.f;
+                }
                 Controller::sendMessage(msg, socket_fd);
             }
             Controller::receiverThreadsMtx.unlock();
