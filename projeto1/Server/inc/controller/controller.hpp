@@ -16,8 +16,8 @@ public:
 
 	static mutex receiverThreadsMtx;
 	static map<int, thread> receiverThreads;
-	static map<int, GameObject> gameObjects;
-
+	static map<int, GameObject*> gameObjects;
+	static map<int, Ball*> balls;
 
 	static int createBall(float radius, float x, float y);
 	static int createBox(float x, float y, float z, float width, float height);

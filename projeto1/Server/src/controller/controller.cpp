@@ -39,7 +39,8 @@ mutex Controller::receiverThreadsMtx;
 
 //map<int, thread> Controller::senderThreads;
 map<int, thread> Controller::receiverThreads;
-map<int, GameObject> Controller::gameObjects;
+map<int, GameObject*> Controller::gameObjects;
+map<int, Ball*> Controller::balls;
 list<int> Controller::toBeDeleted;
 
 thread Controller::messageSenderThread;
@@ -77,7 +78,6 @@ void Controller::init() {
     
 
     srand(time(NULL));
-    Controller::createBall(0.1f, 2.5f - rand () % 5, -1.f);
 
 	Controller::createBox(0.f, 3.5f, -8.f, 10.5f, .5f);
 	Controller::createBox(-5.f, -1.5f, -8.f, .5f, 10.f);
@@ -94,13 +94,10 @@ void Controller::init() {
 
 
 void Controller::update() {
-    //update objects positions
-    map<int, GameObject>::iterator it1;
-    for (it1 = Controller::gameObjects.begin(); it1 != Controller::gameObjects.end(); ++it1) {
-        int index = it1->first;
-
-        GameObject *obj = /*(GameObject*)*/&(Controller::gameObjects[index]);
-        obj->update();
+    //update ball positions
+    map<int, Ball*>::iterator it1;
+    for (it1 = Controller::balls.begin(); it1 != Controller::balls.end(); ++it1) {
+        it1->second->update();
     }
 
     Controller::applyDeletions();
@@ -111,7 +108,7 @@ void Controller::update() {
     //     printf("Colided\n");
     //     Controller::ball->collided = false;
     // }
-    std::this_thread::sleep_for (std::chrono::milliseconds(1));
+    std::this_thread::sleep_for (std::chrono::milliseconds(100));
 }
 
 void Controller::enqueueMessage(NetworkMessage msg) {
@@ -141,6 +138,8 @@ void Controller::connectionHandler(int socket_fd, struct sockaddr_in client){
             Controller::receiverThreadsMtx.lock();
             Controller::receiverThreads[connection_fd] = thread(Controller::keyboardHandler, Controller::createPlatform(), socket_fd, connection_fd, client);
             Controller::receiverThreadsMtx.unlock();
+
+            Controller::createBall(0.1f, 2.5f - rand () % 5, -1.f);
         }
     }
 }
@@ -158,7 +157,7 @@ void Controller::keyboardHandler(int platformId, int socket_fd, int connection_f
         } else {
             printf("Recebi uma mensagem: %s\n", input_buffer);
 
-            Platform *platform = (Platform*)&(Controller::gameObjects[platformId]);
+            Platform *platform = (Platform*)(Controller::gameObjects[platformId]);
 
             /* Identificando cliente */
             char ip_client[INET_ADDRSTRLEN];
@@ -208,42 +207,45 @@ void Controller::keyboardHandler(int platformId, int socket_fd, int connection_f
 
             std::this_thread::sleep_for (std::chrono::milliseconds(1));
         }
-
-        
     }
     close(socket_fd);
 }
 
 int Controller::createBall(float radius, float x, float y) {
-    Ball obj(radius, x, y);
-    int id = obj.setId();
-    Controller::gameObjects[id] = obj;
+    Ball* obj1 = new Ball(radius, x, y);
+    Ball* obj2 = new Ball(radius, x, y);
+    int id = obj1->setId();
+    obj2->id = id;
+    Controller::gameObjects[id] = obj1;
+    Controller::balls[id] = obj2;
     return id;
 }
 
 int Controller::createBox(float x, float y, float z, float width, float height) {
-    Box obj(x, y, z, width, height);
-    int id = obj.setId();
+    Box* obj = new Box(x, y, z, width, height);
+    int id = obj->setId();
     Controller::gameObjects[id] = obj;
     return id;
 }
 
 int Controller::createBrick(float x, float y) {
-    Brick obj(x, y);
-    int id = obj.setId();
+    Brick* obj = new Brick(x, y);
+    int id = obj->setId();
+    obj->updateCollisionLogic();
     Controller::gameObjects[id] = obj;
+    Controller::gameObjects[id]->destroyable = true;
     return id;
 }
 
 int Controller::createPlatform() {
-    Platform obj = Platform();
-    int id = obj.setId();
+    Platform* obj = new Platform();
+    int id = obj->setId();
     Controller::gameObjects[id] = obj;
     return id;
 }
 
 void Controller::markForDeletion(int id) {
-    gameObjects[id].deleted = true;
+    gameObjects[id]->deleted = true;
     Controller::toBeDeleted.push_back(id);
 }
 
@@ -251,11 +253,11 @@ void Controller::applyDeletions() {
     list<int>::iterator it1;
     for (it1 = Controller::toBeDeleted.begin(); it1 != Controller::toBeDeleted.end(); ++it1) {
         int index = *it1;
-        map<int, GameObject>::iterator it2;
+        map<int, GameObject*>::iterator it2;
         it2 = Controller::gameObjects.find(index);
         cout << "Deleting game object " << index << endl;
         Controller::sendDestroy(index);
-        Controller::gameObjects.erase(it2);
+        // Controller::gameObjects.erase(it2);
     }
     Controller::toBeDeleted.clear();
 }

@@ -40,9 +40,6 @@ void GameObject::updateCollisionLogic() {
     };
 }
 
-void GameObject::update() {}   
-
-void GameObject::collide() {}    
 
 int GameObject::setId() {
     this->id = GameObject::totalObjects++;

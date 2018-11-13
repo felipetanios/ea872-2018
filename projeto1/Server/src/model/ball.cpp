@@ -1,4 +1,5 @@
 #include <model/ball.hpp>
+#include <model/brick.hpp>
 #include <controller/controller.hpp>
 #include <list>
 #include <cmath>
@@ -31,10 +32,10 @@ void Ball::update() {
 
 	//to do that we gather all the boundaries lines
 	list<shared_ptr<Line>> worldLines = {};
-    map<int, GameObject>::iterator it;
+    map<int, GameObject*>::iterator it;
     for (it = Controller::gameObjects.begin(); it != Controller::gameObjects.end(); ++it) {
-    	if (!it->second.deleted && it->second.getId() != this->getId()) {
-	        lines.insert(worldLines.end(), it->second.lines.begin(), it->second.lines.end());
+    	if (!it->second->deleted && it->second->getId() != this->getId()) {
+	        lines.insert(worldLines.end(), it->second->lines.begin(), it->second->lines.end());
 	    }
     }
 
@@ -58,10 +59,14 @@ void Ball::update() {
     		}
     	}
     }
-
+    collided = false;
     //afterwards, we set the collided flag to true (this is the flag that we use to generate the sound thread)
 	if (collidedElement != -1 && Controller::gameObjects.find(collidedElement) != Controller::gameObjects.end()) {
-		Controller::gameObjects[collidedElement].collide();
+        GameObject *collidedGameObject = Controller::gameObjects[collidedElement];
+            cout << "################ " << collidedElement << endl;
+        if (collidedGameObject->destroyable) {
+            Controller::markForDeletion(collidedGameObject->getId());
+        }
 		collided = true;
 	}
     if (vCollision == true || hCollision == true ){
@@ -73,9 +78,14 @@ void Ball::update() {
     if (hCollision) ySpeed *= -1;
 	x += xSpeed;
 	y += ySpeed;
-	
-	//and finally we render the ball again
-	this->updateCollisionLogic();
-    Controller::sendNewPosition(*this);
-    if (collided) Controller::sendSound();
+
+	// check if out of boundaries
+    if (x > 10 || x < -10 || y > 10 || y < -10) {
+        Controller::markForDeletion(this->getId());
+    } else {
+    	//and finally we render the ball again
+    	this->updateCollisionLogic();
+        Controller::sendNewPosition(*this);
+        if (collided) Controller::sendSound();
+    }
 }
