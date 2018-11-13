@@ -40,7 +40,9 @@ void Sample::load(const char *filename) {
     std::cerr << "Arquivo " << filename << " nao encontrado" << std::endl;
     return;
   }
-
+  while (! this->data.empty()){
+    this->data.pop_back();
+  }
   while (std::getline(input_file, buffer) ) {
     std::stringstream(buffer) >> fdata;
     (this->data).push_back(fdata);
