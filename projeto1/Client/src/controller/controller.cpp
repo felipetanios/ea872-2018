@@ -48,7 +48,7 @@ void Controller::init() {
     Controller::player = new Player();
 
     /*Playing silence so there's no wierd noise*/
-    Controller::asample->load("assets/silence.dat");
+    Controller::asample->load("../Assets/silence.dat");
     Controller::player->init();
     asample->set_position(0);
     player->play(asample);
@@ -60,19 +60,10 @@ void Controller::init() {
         if (t1-t0 > 5000) break;
     }
 
+    player->pause();   
 
-    // Controller::asample->load("assets/blip.dat");
-    // Controller::player->init();
-
-    // uint64_t t0, t1;
-    // for(ever) {
-    //     std::this_thread::sleep_for (std::chrono::milliseconds(1));
-    //     t1 = get_now_ms();
-
-    //     if (t1-t0 > 5000) break;
-    // }
-    // player->play(asample);
-    player->pause();    
+    Controller::asample->load("../Assets/blip.dat");
+    Controller::player->init();
 
     // init connection
     int conection_opened;
