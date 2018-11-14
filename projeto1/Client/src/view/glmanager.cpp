@@ -6,6 +6,8 @@ using namespace std;
 
 bool GLManager::ready = false;
 
+int Controller::score;
+
 //this is the GLUT and OpenGL manager, it defines the position of lights, window,
 //defines our mainloop, reshape function and most importantly
 //defines that our idle function is the controller update, so
@@ -13,6 +15,7 @@ bool GLManager::ready = false;
 
 void GLManager::init(int argc, char** argv, char name[]) {
 
+    Controller::score = 0;
 	glutInit(&argc, argv);            // Initialize GLUT
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH); // Enable double buffered mode
     glutInitWindowSize(640, 480);   // Set the window's initial width & height
@@ -47,12 +50,18 @@ void GLManager::glDisplay() {
     glLightfv(GL_LIGHT0, GL_SPECULAR, light3pos);
     glLightModelfv(GL_LIGHT_MODEL_AMBIENT, lightmodel);
 
-    map<int, Renderer>::iterator it;
-    for (it = Controller::renderers.begin(); it != Controller::renderers.end(); ++it) {
-        it->second.render();
+    if (!Controller::ended) {
+        map<int, Renderer>::iterator it;
+        for (it = Controller::renderers.begin(); it != Controller::renderers.end(); ++it) {
+            it->second.render();
+        }    
+    } else {
+        string gameOver = "GAME OVER";
+        GLManager::renderText(gameOver, 0.f, 1.f, 0.f);
     }
-    
-    glutSwapBuffers();  // Swap the front and back frame buffers (double buffering)
+    GLManager::renderText(to_string(Controller::score), 0.f, 2.2678f, 0.f);
+
+    glutSwapBuffers();  // Swap the front and back frame buffers (double buffering)    
 }
 
 void GLManager::glReshape(GLsizei width, GLsizei height) {
@@ -98,4 +107,23 @@ void GLManager::mainLoop() {
 void GLManager::exitGlut() {
     //glutLeaveMainLoop();
     //exit(1);
+}
+
+void GLManager::renderText(string txt, float x, float y, float z) {
+    float scale = 0.002f;
+    glPushMatrix();
+
+    GLfloat mat[] = { 1.0f, 1.0f, 0.0f, 1.0f };
+    GLfloat shininess[] = { 100.0f };
+    glMaterialfv(GL_FRONT, GL_AMBIENT,  mat);
+    glMaterialfv(GL_FRONT, GL_DIFFUSE,  mat);
+    glMaterialfv(GL_FRONT, GL_SPECULAR, mat);
+    glMaterialfv(GL_FRONT, GL_SHININESS, shininess);
+
+    glTranslatef(x, y, z);
+    glScalef(scale, scale, scale);
+    for(string::iterator it = txt.begin(); it != txt.end(); ++it) {
+        glutStrokeCharacter( GLUT_STROKE_MONO_ROMAN , *it);
+    }
+    glPopMatrix();
 }

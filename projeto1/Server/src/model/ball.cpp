@@ -34,7 +34,7 @@ void Ball::update() {
 	list<shared_ptr<Line>> worldLines = {};
     map<int, GameObject*>::iterator it;
     for (it = Controller::gameObjects.begin(); it != Controller::gameObjects.end(); ++it) {
-    	if (!it->second->deleted && it->second->getId() != this->getId()) {
+    	if (!it->second->deleted && it->second->getId() != this->getId() && (it->second->owner == 0 || it->second->owner == this->owner)) {
 	        lines.insert(worldLines.end(), it->second->lines.begin(), it->second->lines.end());
 	    }
     }
@@ -69,11 +69,10 @@ void Ball::update() {
         GameObject *collidedGameObject = Controller::gameObjects[collidedElement];
         if (collidedGameObject->destroyable) {
             Controller::markForDeletion(collidedGameObject->getId());
+            Controller::brickCounter--;
+            Controller::scores[this->owner]++;
         }
 		collided = true;
-        if (collidedGameObject->owner != 0 && collidedGameObject->owner != this->owner) {
-            collided = false;
-        } 
 	}
 
     //the last step is (as said before) to change x and y speed because of the colisions

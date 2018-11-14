@@ -29,6 +29,10 @@ uint64_t get_now_ms() {
 }
 
 thread Controller::connectionHandlerThread;
+ 
+int Controller::brickCounter;
+
+map<int, int> Controller::scores;
 
 queue<NetworkMessage> Controller::pendingMessages;
 mutex Controller::msgQueueMtx;
@@ -48,6 +52,7 @@ thread Controller::messageSenderThread;
 int Controller::sequence;
 
 void Controller::init() {
+    Controller::brickCounter = 0;
     signal(SIGPIPE, SIG_IGN); 
     int socket_fd, connection_fd;
     struct sockaddr_in myself, client;
@@ -102,6 +107,9 @@ void Controller::update() {
 
     Controller::applyDeletions();
 
+    if (Controller::brickCounter < 1) {
+        Controller::sendEndOfGame();
+    }
     //detects collision and make sound
     // if (Controller::ball->collided == true){
     //     //when a collision is detected create a new thread that rouns a method to play the sound effect
@@ -126,7 +134,7 @@ void Controller::connectionHandler(int socket_fd, struct sockaddr_in client){
             cerr << "ERROR: " << strerror(errno) << endl;
         } else {
             cout << "Starting new thread for new connection handling" << endl;
-
+            Controller::scores[connection_fd] = 0;
             Controller::permanentMsgQueueMtx.lock();
             list<NetworkMessage>::iterator it1;
             for (it1 = Controller::permanentMessages.begin(); it1 != Controller::permanentMessages.end(); ++it1) {
@@ -241,6 +249,7 @@ int Controller::createBrick(float x, float y) {
     obj->updateCollisionLogic();
     Controller::gameObjects[id] = obj;
     Controller::gameObjects[id]->destroyable = true;
+    Controller::brickCounter++;
     return id;
 }
 
@@ -293,6 +302,7 @@ void Controller::messageSender() {
                     msg.g = 0.f;
                     msg.b = 1.f;
                 }
+                msg.score = Controller::scores[socket_fd];
                 Controller::sendMessage(msg, socket_fd);
             }
             Controller::receiverThreadsMtx.unlock();
@@ -364,6 +374,12 @@ void Controller::sendDestroy(int id) {
 void Controller::sendSound() {
     NetworkMessage msg;
     msg.messageType = (char)MessageType_PlaySound;
+    Controller::enqueueMessage(msg);
+}
+
+void Controller::sendEndOfGame() {
+    NetworkMessage msg;
+    msg.messageType = (char)MessageType_EndOfGame;
     Controller::enqueueMessage(msg);
 }
 

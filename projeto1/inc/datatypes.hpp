@@ -5,6 +5,7 @@ struct NetworkMessage {
 	char messageType;
 	int objectId;
 	int sequence;
+	int score = 0;
 	char rendererType;
 	float x, y, z;
 	float r, g, b;
@@ -14,8 +15,10 @@ struct NetworkMessage {
 enum MessageType {
 	MessageType_NewObject = 1,
 	MessageType_NewPosition = 2,
-	MessageType_Destroy = 3,
-	MessageType_PlaySound = 4,
+	MessageType_Score = 3,
+	MessageType_Destroy = 4,
+	MessageType_PlaySound = 5,
+	MessageType_EndOfGame = 6
 };
 
 enum RendererType {

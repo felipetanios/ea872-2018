@@ -23,6 +23,9 @@ public:
 	static thread senderThread, receiverThread;
 	static int connectionId;
 	static int socketId;
+	
+	static bool ended;
+	static int score;
 
 	static void init();
 	static void readKeyboardInput(unsigned char key, int x, int y);

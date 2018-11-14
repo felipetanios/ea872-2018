@@ -30,6 +30,8 @@ queue<char> Controller::keyboardBuffer;
 Sample *Controller::asample;
 Player *Controller::player;
 
+bool Controller::ended;
+
 int Controller::socketId;
 int Controller::connectionId;
 thread Controller::senderThread;
@@ -43,6 +45,9 @@ uint64_t get_now_ms() {
 }
 
 void Controller::init() {
+    Controller::ended = false;
+    Controller::score = 0;
+
     // init sound 
     Controller::asample = new Sample();
     Controller::player = new Player();
@@ -137,8 +142,19 @@ void Controller::receiverLoop() {
                 cout << "Play sound" << endl;
                 Controller::soundThreads.push_back(std::thread(threadSound, Controller::player, Controller::asample));
                 break;
+
+            case MessageType_EndOfGame:
+                cout << "The end" << endl;
+                Controller::ended = true;
+                break;
         }
 
+        if (msg.score != 0) 
+            Controller::score = msg.score;
+
+        if (Controller::ended) 
+            break;
+        
         std::this_thread::sleep_for (std::chrono::milliseconds(1));
     }
     cout << "Finalizano thread de recepção" << endl;
@@ -155,7 +171,7 @@ void Controller::threadSound (Player *player, Sample *asample) {
     player->play(asample);
 
     t0 = get_now_ms();
-    while (1) {
+    for(ever) {
         std::this_thread::sleep_for (std::chrono::milliseconds(1));
         t1 = get_now_ms();
 

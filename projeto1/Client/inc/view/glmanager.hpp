@@ -6,7 +6,11 @@
 #endif
 #ifdef __linux__
 	#include <GL/glut.h>
-#endif	
+#endif
+
+#include <string>
+
+using namespace std;
 
 class GLManager {
 public:
@@ -19,6 +23,7 @@ public:
 	static void redisplay();
 	static void mainLoop();
 	static void exitGlut();
+	static void renderText(string txt, float x, float y, float z);
 	static bool ready;
 };
 #endif

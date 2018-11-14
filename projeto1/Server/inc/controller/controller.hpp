@@ -18,6 +18,7 @@ public:
 	static map<int, thread> receiverThreads;
 	static map<int, GameObject*> gameObjects;
 	static map<int, Ball*> balls;
+	static map<int, int> scores;
 
 	static int createBall(float radius, float x, float y, int owner);
 	static int createBox(float x, float y, float z, float width, float height);
@@ -29,9 +30,12 @@ public:
 	static void sendNewPosition(int gameObjectId, float x, float y, float z);
 	static void sendDestroy(int id);
 	static void sendSound();
+	static void sendEndOfGame();
 
 	static int sequence;
 	
+	static int brickCounter;
+
 	static void keyboardHandler(int platformId, int socket_fd, int connection_fd, struct sockaddr_in client);
 
 	static thread messageSenderThread;
