@@ -36,7 +36,7 @@ public:
 	
 	static int brickCounter;
 
-	static void keyboardHandler(int platformId, int socket_fd, int connection_fd, struct sockaddr_in client);
+	static void keyboardHandler(int platformId, int connection_fd, struct sockaddr_in client);
 
 	static thread messageSenderThread;
 	static void messageSender();
@@ -50,7 +50,7 @@ public:
 	static list<NetworkMessage> permanentMessages;
 	static mutex permanentMsgQueueMtx;
 
-	static void init();
+	static void init(char serverAddress[], int serverPort);
 	static void update();
 	static void enqueueMessage(NetworkMessage msg);
 	static void sendMessage(NetworkMessage msg, int socket_fd);

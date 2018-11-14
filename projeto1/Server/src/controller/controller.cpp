@@ -51,38 +51,30 @@ thread Controller::messageSenderThread;
 
 int Controller::sequence;
 
-void Controller::init() {
+void Controller::init(char serverAddress[], int serverPort) {
     Controller::brickCounter = 0;
     signal(SIGPIPE, SIG_IGN); 
+    srand(time(NULL));
     int socket_fd, connection_fd;
     struct sockaddr_in myself, client;
     
     char input_buffer[50];
 
     socket_fd = socket(AF_INET, SOCK_STREAM, 0);
-    printf("Socket criado\n");
-
     myself.sin_family = AF_INET;
-    myself.sin_port = htons(3001);
-    inet_aton("127.0.0.1", &(myself.sin_addr));
-
-    printf("Tentando abrir porta 3001\n");
+    myself.sin_port = htons(serverPort);
+    inet_aton(serverAddress, &(myself.sin_addr));
 
     if (::bind(socket_fd, (struct sockaddr*)&myself, sizeof(myself)) < 0) {
-        printf("Problemas ao abrir porta\n");
+        cerr << "ERROR ON OPENING PORT " << serverPort << " ON " << serverAddress << ": " << strerror(errno) << endl;
+        return;
     }
-    printf("Abri porta 3001!\n");
 
     listen(socket_fd, 2);
-    printf("Estou ouvindo na porta 3001!\n");
+    cout << "Listening on port " << serverPort << " on " << serverAddress << endl;
 
     Controller::connectionHandlerThread = thread(Controller::connectionHandler, socket_fd, client);
     Controller::messageSenderThread = thread(Controller::messageSender);
-
-    printf("Conectado");
-    
-
-    srand(time(NULL));
 
 	Controller::createBox(0.f, 3.5f, -8.f, 10.5f, .5f);
 	Controller::createBox(-5.f, -1.5f, -8.f, .5f, 10.f);
@@ -101,9 +93,9 @@ void Controller::init() {
 void Controller::update() {
     //update ball positions
     map<int, Ball*>::iterator it1;
-    for (it1 = Controller::balls.begin(); it1 != Controller::balls.end(); ++it1) {
-        it1->second->update();
-    }
+    for (it1 = Controller::balls.begin(); it1 != Controller::balls.end(); ++it1) 
+        if (!it1->second->deleted) 
+            it1->second->update();
 
     Controller::applyDeletions();
 
@@ -133,7 +125,7 @@ void Controller::connectionHandler(int socket_fd, struct sockaddr_in client){
         if (connection_fd < 0) {
             cerr << "ERROR: " << strerror(errno) << endl;
         } else {
-            cout << "Starting new thread for new connection handling" << endl;
+            cout << "New connection " << connection_fd << endl;
             Controller::scores[connection_fd] = 0;
             Controller::permanentMsgQueueMtx.lock();
             list<NetworkMessage>::iterator it1;
@@ -150,32 +142,29 @@ void Controller::connectionHandler(int socket_fd, struct sockaddr_in client){
             Controller::permanentMsgQueueMtx.unlock();
 
             Controller::receiverThreadsMtx.lock();
-            Controller::receiverThreads[connection_fd] = thread(Controller::keyboardHandler, Controller::createPlatform(connection_fd), socket_fd, connection_fd, client);
+            Controller::receiverThreads[connection_fd] = thread(Controller::keyboardHandler, Controller::createPlatform(connection_fd), connection_fd, client);
             Controller::receiverThreadsMtx.unlock();
             Controller::createBall(0.1f, 2.5f - rand () % 5, -1.f, connection_fd);
         }
     }
 }
 
-void Controller::keyboardHandler(int platformId, int socket_fd, int connection_fd, struct sockaddr_in client){
+void Controller::keyboardHandler(int platformId, int connection_fd, struct sockaddr_in client){
+    cout << "Starting keyboard handler thread for connection " << connection_fd << endl;
     for(ever){
-        printf("Vou travar ate receber alguma coisa\n");
         char input_buffer[sizeof(NetworkMessage)];
         bool stop = false;
         int retVal = recv(connection_fd, input_buffer, 1, 0);
-        if (retVal == 0) {
-            cerr << "Warning: Received 0 byte" << endl;
-        } else if (retVal < 0) {
+        if (retVal < 0) {
             cerr << "ERROR: " << strerror(errno) << endl;
         } else {
-            printf("Recebi uma mensagem: %s\n", input_buffer);
 
             Platform *platform = (Platform*)(Controller::gameObjects[platformId]);
 
             /* Identificando cliente */
             char ip_client[INET_ADDRSTRLEN];
             inet_ntop( AF_INET, &(client.sin_addr), ip_client, INET_ADDRSTRLEN );
-            printf("IP que enviou: %s\n", ip_client);
+            
 
             switch(input_buffer[0]) {
                 //if a is pressed, the platform moves to the left
@@ -221,7 +210,8 @@ void Controller::keyboardHandler(int platformId, int socket_fd, int connection_f
             std::this_thread::sleep_for (std::chrono::milliseconds(1));
         }
     }
-    close(socket_fd);
+    close(connection_fd);
+    cout << "Ending keyboard handler thread for connection " << connection_fd << endl;
 }
 
 int Controller::createBall(float radius, float x, float y, int owner) {
@@ -272,9 +262,18 @@ void Controller::applyDeletions() {
         int index = *it1;
         map<int, GameObject*>::iterator it2;
         it2 = Controller::gameObjects.find(index);
-        cout << "Deleting game object " << index << endl;
-        Controller::sendDestroy(index);
-        // Controller::gameObjects.erase(it2);
+        if (it2 != Controller::gameObjects.end()) {
+            cout << "Deleting game object " << index << endl;
+            Controller::sendDestroy(index);
+            delete it2->second;
+            Controller::gameObjects.erase(it2);
+        }
+
+        map<int, Ball*>::iterator it3;
+        it3 = Controller::balls.find(index);
+        if (it3 != Controller::balls.end()) {
+            Controller::balls.erase(it3);
+        }
     }
     Controller::toBeDeleted.clear();
 }
@@ -313,12 +312,8 @@ void Controller::messageSender() {
 
 void Controller::sendMessage(NetworkMessage msg, int socket_fd) {
     auto retVal = send(socket_fd, (const void*)&msg, sizeof(msg), 0);
-    if (retVal == 0) {
-        cerr << "Warning: Send returned 0" << endl;   
-    } else if (retVal == -1) {
-        cerr << "ERROR: " << strerror(errno) << endl;
-    } else {
-        cout << "Sent " << retVal << " bytes" << endl; 
+    if (retVal == -1 && errno != 32) { // errno 32 = broken pipe, or end of connection
+        cerr << "ERROR " << errno << ": " << strerror(errno) << endl;
     }
 }
 
@@ -355,7 +350,6 @@ void Controller::sendNewPosition(int gameObjectId, float x, float y, float z) {
     msg.x = x;
     msg.y = y;
     msg.z = z;
-    cout << "Sending object " << msg.objectId << " position " << msg.x << " " << msg.y << " " << msg.z << endl;
     Controller::enqueueMessage(msg);
 }
 

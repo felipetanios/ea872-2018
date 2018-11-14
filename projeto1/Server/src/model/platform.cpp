@@ -21,14 +21,12 @@ Platform::Platform() {
 
 void Platform::moveRight() {
 	x += MOVE_INCREMENT;
-	cout << "new platform position " << x << endl;
 	this->updateCollisionLogic();
 	Controller::sendNewPosition(*this);
 }
 
 void Platform::moveLeft() {
 	x -= MOVE_INCREMENT;
-	cout << "new platform position " << x << endl;
 	this->updateCollisionLogic();
 	Controller::sendNewPosition(*this);
 }
