@@ -44,7 +44,7 @@ uint64_t get_now_ms() {
   return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
 }
 
-void Controller::init() {
+void Controller::init(char serverAddress[], int serverPort) {
     Controller::ended = false;
     Controller::score = 0;
 
@@ -77,24 +77,23 @@ void Controller::init() {
     conection_opened = 1;
 
     Controller::socketId = socket(AF_INET, SOCK_STREAM, 0);
-    printf("Socket criado\n");
 
     target.sin_family = AF_INET;
-    target.sin_port = htons(3001);
-    inet_aton("127.0.0.1", & (target.sin_addr));
+    target.sin_port = htons(serverPort);
+    inet_aton(serverAddress, & (target.sin_addr));
     while (connect(Controller::socketId, (struct sockaddr * ) & target, sizeof(target)) != 0) {
-        printf("Tentando conectar\n");
+        cout << "Trying to connect to " << serverAddress << " on port " << serverPort << endl;
         std::this_thread::sleep_for (std::chrono::milliseconds(500));
     }
 
-    printf("Conectei ao servidor\n");
+    cout << "Connected" << endl;
 
     senderThread = thread(senderLoop);
     receiverThread = thread(receiverLoop);
 }
 
 void Controller::receiverLoop() {
-    cout << "Iniciando thread de recepção" << endl;
+    cout << "Starting receiver thread" << endl;
     for(ever) {
         NetworkMessage msg;
         int status = recv(Controller::socketId, &msg, sizeof(msg), 0);
@@ -127,7 +126,6 @@ void Controller::receiverLoop() {
                 break;
             
             case MessageType_NewPosition:
-                cout << "New object " << msg.objectId << " position " << msg.x << " " << msg.y << " " << msg.z << endl;
                 Controller::renderers[msg.objectId].setPosition(msg.x, msg.y, msg.z);
                 GLManager::redisplay();
                 break;
@@ -139,7 +137,6 @@ void Controller::receiverLoop() {
                 break;
 
             case MessageType_PlaySound:
-                cout << "Play sound" << endl;
                 Controller::soundThreads.push_back(std::thread(threadSound, Controller::player, Controller::asample));
                 break;
 
@@ -154,17 +151,17 @@ void Controller::receiverLoop() {
 
         if (Controller::ended) 
             break;
-        
+
         std::this_thread::sleep_for (std::chrono::milliseconds(1));
     }
-    cout << "Finalizano thread de recepção" << endl;
+    cout << "Ending receiver thread" << endl;
 }
 
 
 //this is the thread created to play the sound effect
 //it simply plays the sample object with the player object
 void Controller::threadSound (Player *player, Sample *asample) {
-    cout << "Iniciando thread de som" << endl;
+    cout << "Starting sound thread" << endl;
     uint64_t t0, t1;
     //it starts the sample to the beggining position then plays it, wait a little and finally pauses the player
     asample->set_position(0);
@@ -178,11 +175,11 @@ void Controller::threadSound (Player *player, Sample *asample) {
         if (t1-t0 > 500) break;
     }
     player->pause();
-    cout << "Finalizando thread de som" << endl;
+    cout << "Ending sound thread" << endl;
 }
 
 void Controller::senderLoop() {
-    cout << "Iniciando thread de envio" << endl;
+    cout << "Starting sender thread" << endl;
     for(ever) {
         char c = -1;
         Controller::mtx.lock();
@@ -206,22 +203,17 @@ void Controller::senderLoop() {
             break;
         }
 
-        printf("mensagem: %s\n", msg);
         /* Agora, meu socket funciona como um descritor de arquivo usual */
-        auto retVal = send(Controller::socketId, msg, 1, 0);
-        cout<<retVal<<endl;
-        // printf("Escrevi mensagem de ping!\n");
-        //sleep(1);
-
-        /* Recebendo resposta */
-        //char reply[10];
-        //recv(Controller::socketId, reply, 10, 0);
-        //printf("Resposta:\n%s\n", reply);
+        int status = send(Controller::socketId, msg, 1, 0);
+        if (status < 0) {
+            cerr << "ERROR: " << strerror(errno) << endl;
+            break;
+        }
         std::this_thread::sleep_for (std::chrono::milliseconds(1));
 
     }
     close(Controller::socketId);
-    cout << "Finalizando thread de envio" << endl;
+    cout << "Ending sender thread" << endl;
 }
 
 

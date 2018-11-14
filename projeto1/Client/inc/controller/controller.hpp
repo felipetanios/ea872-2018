@@ -27,7 +27,7 @@ public:
 	static bool ended;
 	static int score;
 
-	static void init();
+	static void init(char serverAddress[], int serverPort);
 	static void readKeyboardInput(unsigned char key, int x, int y);
 	static void receiverLoop();
 	static void senderLoop();
