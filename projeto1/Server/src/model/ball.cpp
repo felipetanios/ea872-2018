@@ -61,17 +61,20 @@ void Ball::update() {
     }
     collided = false;
     //afterwards, we set the collided flag to true (this is the flag that we use to generate the sound thread)
+
+    if (vCollision == true || hCollision == true ){
+        collided = true;
+    }
 	if (collidedElement != -1 && Controller::gameObjects.find(collidedElement) != Controller::gameObjects.end()) {
         GameObject *collidedGameObject = Controller::gameObjects[collidedElement];
-            cout << "################ " << collidedElement << endl;
         if (collidedGameObject->destroyable) {
             Controller::markForDeletion(collidedGameObject->getId());
         }
 		collided = true;
+        if (collidedGameObject->owner != 0 && collidedGameObject->owner != this->owner) {
+            collided = false;
+        } 
 	}
-    if (vCollision == true || hCollision == true ){
-    	collided = true;
-    }
 
     //the last step is (as said before) to change x and y speed because of the colisions
     if (vCollision) xSpeed *= -1;
